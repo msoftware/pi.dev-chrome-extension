@@ -34,6 +34,8 @@ export interface ToolEnv {
   progress(message: string, index?: number, total?: number): void;
   /** Runs the permission check (dialog if needed); throws ToolError when denied. */
   authorize(x: AuthExtras): Promise<void>;
+  /** Tells the environment which tab the running (sub-)action works on, for the SEC-08 domain comparison. */
+  setActiveTab(tabId: number): void;
   /** SEC-08 pre-check on the tab. */
   guard(tabId: number, what: string): Promise<void>;
   /** Collected screenshot ids for the panel's tool log. */

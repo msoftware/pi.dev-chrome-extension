@@ -239,7 +239,7 @@ export function autoDecide(panel: Page, decision: "once" | "always" | "deny", lo
       try {
         const d = panel.getByTestId("approval").first();
         if (await d.isVisible({ timeout: 200 }).catch(() => false)) {
-          log.push({ domain: (await panel.getByTestId("approval-domain").first().textContent().catch(() => "")) ?? "", tool: (await d.textContent()) ?? "", preview: (await panel.getByTestId("approval-preview").first().textContent().catch(() => "")) ?? "" });
+          log.push({ domain: (await panel.getByTestId("approval-domain").first().textContent({ timeout: 300 }).catch(() => "")) ?? "", tool: (await d.textContent({ timeout: 300 }).catch(() => "")) ?? "", preview: (await panel.getByTestId("approval-preview").first().textContent({ timeout: 300 }).catch(() => "")) ?? "" });
           await panel.getByTestId(decision === "once" ? "allow-once" : decision === "always" ? "allow-always" : "deny").first().click({ timeout: 2000 });
         }
       } catch {

@@ -113,7 +113,12 @@ export class ToolExecutor {
 
   private makeEnv(req: ToolRequest, toolCallId: string, signal: AbortSignal, group: GroupSession, settings: Awaited<ReturnType<typeof getSettings>>, shots: string[], entry: ToolLogEntry, inBatch: boolean): ToolEnv {
     const deps = this.deps;
+    const expected = new Map<number, string>(); // tab -> domain it was on when its action was authorised (SEC-08)
+    let activeTab: number | undefined;
     const env: ToolEnv = {
+      setActiveTab: (id) => {
+        activeTab = id;
+      },
       req,
       toolCallId,
       signal,
@@ -144,6 +149,7 @@ export class ToolExecutor {
           preview: x.preview,
           signal,
         });
+        if (x.tabUrl && isHttpUrl(x.tabUrl) && !x.targetUrl && activeTab !== undefined) expected.set(activeTab, registrableDomain(x.tabUrl));
         await audit({ sessionId: deps.piSessionId(), tool, action: String((args as any).action ?? tool), domain: r.domain, decision: r.decision, result: r.allowed ? "ok" : "denied", note: r.allowed ? undefined : r.reason });
         if (!r.allowed) throw new ToolError(r.reason ?? "Not permitted");
         // SEC-09: in automatic mode every consequential action gets a second look.
@@ -153,7 +159,7 @@ export class ToolExecutor {
       },
       guard: async (tabId, what) => {
         try {
-          await preCheck(tabId, group.groupId, deps.perms, what);
+          await preCheck(tabId, group.groupId, deps.perms, what, expected.get(tabId));
         } catch (e) {
           if (e instanceof SafetyError) throw new ToolError(e.message);
           throw e;
@@ -218,6 +224,7 @@ export class ToolExecutor {
     }
     const tabId = a.tabId as number;
     const tab = await assertInGroup(tabId, env.group.groupId); // UI-07 / SEC-07
+    env.setActiveTab(tabId);
     // TOOL-09
     if (name !== "navigate" && isRestrictedPage(tab.url || tab.pendingUrl)) {
       throw new ToolError(`This is a browser-internal or store page (${tab.url || tab.pendingUrl}) where only navigate is available. Navigate to a regular web page first.`);
