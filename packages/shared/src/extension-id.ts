@@ -1,0 +1,4 @@
+/** Fixed extension identity (EXT-04): the manifest "key" yields this ID in dev and release builds. */
+export const EXTENSION_KEY =
+  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsLYyq8vILkfP345QodzO9ecu/0grmVybFOuHN2PXMYmdXU8HumRvEDZ8aUFCdhfwIW3EJQ4BUvciZw/l38p7CguLG1vvTBxqUJ9HhrM/LfQq+ynkrwbqgtiFLCDaKICBclS+FKJ2J6NNKxucs3q5MA7jl+imJCOZVj7jHfaPerVf60727C/mHCpten0moT84u6jWLmPkZtMUK4q3Xn25AIMStEY+Bhp44sSuFqTYt8u/lgcB0VTKdO7UxBFG4BUF1FxkZbzficf4ZZUXZIH61YwBBs0beXvymYfQ8lbzg76ydr0XpBr2hpwi8+pcR5ACRJ8rMOWAquzJV1N3CyG1HwIDAQAB";
+export const EXTENSION_ID = "omfoefeoobddgdfoichknkcidfoippih";
