@@ -40,7 +40,8 @@ export class GifRecorder {
 
   async handle(env: ToolEnv, tabId: number, a: { action: string; download?: boolean; coordinate?: [number, number]; options?: Record<string, unknown> }): Promise<Out> {
     const gid = env.group.groupId;
-    switch (a.action) {
+    const action = a.action === "start" ? "start_recording" : a.action === "stop" ? "stop_recording" : a.action; // short names are accepted too
+    switch (action) {
       case "start_recording": {
         const old = this.recs.get(gid);
         if (old) await clearFrames(old.id);

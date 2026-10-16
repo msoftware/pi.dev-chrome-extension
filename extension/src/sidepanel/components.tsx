@@ -197,7 +197,7 @@ export function ApprovalDialog({ req, onDecide }: { req: ApprovalRequest; onDeci
     if (e.key === "Escape") onDecide("deny");
   };
   return (
-    <div className="approval" role="alertdialog" aria-modal="true" aria-labelledby={`ap-t-${req.id}`} onKeyDown={onKey} data-testid="approval">
+    <div className="approval" role="alertdialog" aria-modal="true" aria-labelledby={`ap-t-${req.id}`} onKeyDown={onKey} data-testid="approval" data-approval-id={req.id}>
       <h2 id={`ap-t-${req.id}`}>{req.type === "PLAN_APPROVAL" && req.plan ? t("approvePlan") : t("approveTitle")}</h2>
       <dl>
         {req.domain && (

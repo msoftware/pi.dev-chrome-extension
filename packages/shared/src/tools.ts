@@ -278,7 +278,7 @@ export const TOOL_DEFS: ToolDef[] = [
     description:
       "Record the actions of a task as an animated GIF. start_recording, then act (each action adds a frame), stop_recording, then export (download, or drag onto a page with coordinate) or clear.",
     parameters: Type.Object({
-      action: Type.Union([Type.Literal("start_recording"), Type.Literal("stop_recording"), Type.Literal("export"), Type.Literal("clear")]),
+      action: Type.Union([Type.Literal("start_recording"), Type.Literal("stop_recording"), Type.Literal("start"), Type.Literal("stop"), Type.Literal("export"), Type.Literal("clear")]),
       download: Type.Optional(Type.Boolean()),
       coordinate: Type.Optional(coord),
       options: Type.Optional(

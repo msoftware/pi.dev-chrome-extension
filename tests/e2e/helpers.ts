@@ -235,11 +235,14 @@ export async function expectEventually(fn: () => boolean | Promise<boolean>, ms 
 /** Clicks Allow/Deny in the panel whenever an approval dialog appears. */
 export function autoDecide(panel: Page, decision: "once" | "always" | "deny", log: { domain: string; tool: string; preview: string }[] = []) {
   let stop = false;
+  const handled = new Set<string>(); // the dialog stays in the DOM for a moment after the click; never answer it twice
   (async () => {
     while (!stop) {
       try {
         const d = panel.getByTestId("approval").first();
-        if (await d.isVisible({ timeout: 200 }).catch(() => false)) {
+        const id = await d.getAttribute("data-approval-id", { timeout: 200 }).catch(() => null);
+        if (id && !handled.has(id)) {
+          handled.add(id);
           log.push({ domain: (await panel.getByTestId("approval-domain").first().textContent({ timeout: 300 }).catch(() => "")) ?? "", tool: (await d.textContent({ timeout: 300 }).catch(() => "")) ?? "", preview: (await panel.getByTestId("approval-preview").first().textContent({ timeout: 300 }).catch(() => "")) ?? "" });
           await panel.getByTestId(decision === "once" ? "allow-once" : decision === "always" ? "allow-always" : "deny").first().click({ timeout: 2000 });
         }

@@ -8,10 +8,10 @@ import { RealPi } from "./real-pi";
 
 /** API-01: terminal-led operation against a REAL pi process (scripted model, real bridge, real extension). */
 
-async function boot(scenario: string) {
+async function boot(scenario: string, opts: { persist?: boolean } = {}) {
   const site = await startSite();
   const pi = new RealPi();
-  await pi.start(scenario);
+  await pi.start(scenario, undefined, opts);
   const userDir = fs.mkdtempSync(path.join(os.tmpdir(), "pw-real-"));
   const ctx = await chromium.launchPersistentContext(userDir, {
     executablePath: process.env.CHROME_PATH || (fs.existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined),
@@ -202,6 +202,32 @@ test("real pi: a JavaScript tool disabled in the extension is not offered to the
     const first = h.pi.requests()[0];
     expect(first.tools).toContain("read_page");
     expect(first.tools).not.toContain("javascript_tool");
+  } finally {
+    await h.close();
+  }
+});
+
+test("real pi: the session history comes from pi's stored sessions and can be reopened read-only (UI-18)", async () => {
+  const h = await boot("browse", { persist: true });
+  try {
+    const page = await h.ctx.newPage();
+    await page.goto(`${h.site.a}/index.html`);
+    const tabId = await tabIdOf(h.env, page);
+    const panel = await openPanel(h.env, tabId);
+    await pairPanel(panel, h.pi);
+    await page.bringToFront();
+    await panel.getByTestId("input").fill("click the increment button");
+    await panel.getByTestId("send").click();
+    await expect(panel.getByTestId("msg-assistant").last()).toContainText("Finished", { timeout: 40_000 });
+    // start a second, empty session in pi; the first one is now history
+    h.pi.send({ id: "new", type: "prompt", message: "/browser new" });
+    await expect(panel.getByTestId("status")).toHaveText(/Connected|Verbunden/, { timeout: 20_000 });
+    await panel.getByRole("button", { name: /Chat history|Verlauf/ }).click();
+    const items = panel.getByRole("menuitem");
+    await expectEventually(async () => (await items.count()) >= 1, 15_000, "the earlier session in the list"); // the new empty one is not stored before its first message
+    await panel.getByRole("menuitem", { name: /click the increment button/ }).click();
+    await expect(panel.getByText("Finished: clicked the Increment button")).toBeVisible({ timeout: 10_000 });
+    await expect(panel.getByTestId("send")).toBeDisabled();
   } finally {
     await h.close();
   }

@@ -3,6 +3,6 @@
 <button id="confirm" onclick="document.getElementById('r').textContent='confirm: '+confirm('Really?')">Show confirm</button>
 <button id="prompt" onclick="document.getElementById('r').textContent='prompt: '+prompt('Name?', 'x')">Show prompt</button>
 <span id="r"></span>
-<script>addEventListener('beforeunload', e => { if (window.dirty) { e.preventDefault(); e.returnValue=''; } });</script>
-<button id="dirty" onclick="window.dirty=true">Make dirty</button>
+<script>addEventListener('beforeunload', e => { if (window.__dirty) { e.preventDefault(); e.returnValue=''; } });</script>
+<button id="dirty" onclick="window.__dirty=true">Make dirty</button>
 </body></html>

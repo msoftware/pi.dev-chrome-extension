@@ -90,7 +90,7 @@ Das Werkzeug führt beliebigen Code im Seitenkontext aus und ist deshalb abschal
 
 ```bash
 npm run typecheck        # tsc für alle Pakete
-npm test                 # Vitest: 100+ Unit-Tests (Skalierung, Tastentabelle, Filter, Baum-Snapshots, Berechtigungen, Bridge-Server, GIF, i18n, Manifest, …)
+npm test                 # Vitest: knapp 100 Unit-Tests (Skalierung, Tastentabelle, Filter, Baum-Snapshots, Berechtigungen, Bridge-Server, GIF, i18n, Manifest, …)
 npm run build && npm run test:e2e   # Playwright: lädt Chrome mit der Erweiterung
 npm run test:all         # alles
 ```

@@ -34,10 +34,10 @@ export class RealPi {
     }
   }
 
-  async start(scenario: string, cwd = ROOT) {
+  async start(scenario: string, cwd = ROOT, opts: { persist?: boolean } = {}) {
     this.port = await freePort();
     const bin = path.join(ROOT, "node_modules/@earendil-works/pi-coding-agent/dist/cli.js");
-    this.proc = spawn(process.execPath, [bin, "--mode", "rpc", "--no-session", "--provider", "fakellm", "--model", "script", "--browser-port", String(this.port), "-e", path.join(ROOT, "packages/bridge/src/index.ts"), "-e", path.join(ROOT, "tests/e2e/fixtures/fake-llm.ts")], {
+    this.proc = spawn(process.execPath, [bin, "--mode", "rpc", ...(opts.persist ? [] : ["--no-session"]), "--provider", "fakellm", "--model", "script", "--browser-port", String(this.port), "-e", path.join(ROOT, "packages/bridge/src/index.ts"), "-e", path.join(ROOT, "tests/e2e/fixtures/fake-llm.ts")], {
       cwd,
       env: { ...process.env, FAKE_LLM_DUMP: this.dump, PI_CODING_AGENT_DIR: path.join(this.dir, "agent"), FAKE_LLM_SCENARIO: scenario, PI_OFFLINE: "1", PI_SKIP_VERSION_CHECK: "1" },
     });
