@@ -93,8 +93,9 @@ export class FakePi {
       heartbeatMs: 1000,
       handlers: {
         health: () => ({ bridgeVersion: "test", piVersion: "test", model: "fake/model", sessionId: this.sessionId }),
-        prompt: async (b) => void this.prompts.push(b),
-        steer: async (b) => void this.steers.push(b),
+        // like the real bridge: echo the panel's message into the stream
+        prompt: async (b) => (this.prompts.push(b), this.server.emit({ type: "user_message", text: b.text, source: "panel" })),
+        steer: async (b) => (this.steers.push(b), this.server.emit({ type: "user_message", text: b.text, source: "panel" })),
         abort: async () => void this.aborts++,
         listSessions: async () => [{ id: this.sessionId, name: "Current", updatedAt: Date.now() }, { id: "old1", name: "Earlier chat", updatedAt: Date.now() - 1e6 }],
         newSession: async () => ({ id: "new" }),
