@@ -1,0 +1,7 @@
+<!doctype html><html><head><title>Shadow</title></head><body>
+<my-card id="card"></my-card>
+<script>
+  const sr = document.getElementById('card').attachShadow({mode:'open'});
+  sr.innerHTML = '<h2>Card title</h2><button>Buy now</button><slot></slot>';
+  const slotted = document.createElement('a'); slotted.href = '/more'; slotted.textContent = 'Slotted link'; document.getElementById('card').appendChild(slotted);
+</script></body></html>

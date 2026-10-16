@@ -1,0 +1,20 @@
+banner [ref_1]
+ heading "The Daily Fixture" [ref_2]
+article [ref_3]
+ heading "How the accessibility tree works" [ref_4]
+ generic "This paragraph has direct text that is long enough to be named in the outline." [ref_5]
+ image "A diagram of a tree" [ref_6]
+ list [ref_7]
+  listitem [ref_8]
+   link "First" [ref_9] href="#a"
+  listitem [ref_10]
+   link "Second" [ref_11] href="#b"
+ table [ref_12]
+  generic "Cell" [ref_13]
+ generic [ref_14]
+  generic "More" [ref_15]
+  generic "Hidden details text" [ref_16]
+aside "Related" [ref_17]
+ link "Related one" [ref_18] href="/r1"
+button "Custom button" [ref_19]
+generic "Clickable div text" [ref_20]

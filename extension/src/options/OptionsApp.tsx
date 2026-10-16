@@ -117,6 +117,10 @@ export function OptionsApp() {
           <input type="checkbox" checked={s.jsToolEnabled} disabled={p.javascriptToolEnabled === false} onChange={(e) => update({ jsToolEnabled: e.target.checked })} />
           {t("jsTool")} {p.javascriptToolEnabled === false && <small className="muted">({t("lockedByPolicy")})</small>}
         </label>
+        <label className="field">
+          <span>{t("jsTimeout")}</span>
+          <input type="number" min={1} max={300} value={s.jsTimeoutSeconds} onChange={(e) => update({ jsTimeoutSeconds: Number(e.target.value) || 30 })} />
+        </label>
         <h3>{t("savedGrants")}</h3>
         {grants.length === 0 ? (
           <p className="muted">{t("noGrants")}</p>
@@ -154,6 +158,14 @@ export function OptionsApp() {
         <label className="check">
           <input type="checkbox" checked={s.showThinking} onChange={(e) => update({ showThinking: e.target.checked })} />
           {t("showThinking")}
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={s.capturePostData} onChange={(e) => update({ capturePostData: e.target.checked })} />
+          {t("capturePostData")}
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={s.debug} onChange={(e) => update({ debug: e.target.checked })} />
+          {t("debugLog")}
         </label>
         <label className="check">
           <input type="checkbox" checked={s.notifySound} onChange={(e) => update({ notifySound: e.target.checked })} />

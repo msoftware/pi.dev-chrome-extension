@@ -1,0 +1,7 @@
+link "First" [ref_1] href="#a"
+link "Second" [ref_2] href="#b"
+generic [ref_3]
+ generic "More" [ref_4]
+link "Related one" [ref_5] href="/r1"
+button "Custom button" [ref_6]
+generic "Clickable div text" [ref_7]

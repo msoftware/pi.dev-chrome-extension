@@ -5,6 +5,7 @@
 import type { BridgeEvent, PromptBody, ToolRequest, ToolResult } from "@pi-browser/shared/protocol";
 import { addAudit, purgeAudit, putShot } from "../common/idb";
 import type { PanelMsg, StatusInfo, HistoryMessage } from "../common/messages";
+import { log, setDebug } from "../common/log";
 import { getAuth, getSettings, getShortcuts, saveSettings, type Shortcut } from "../common/storage";
 import { BridgeClient, BridgeError } from "./bridge-client";
 import { detachAll, forgetTab, installListeners, noteTabUrl, onDetached, onDialog, tabState } from "./cdp";
@@ -94,7 +95,10 @@ async function refreshPanel(conn?: ReturnType<PanelHub["connections"]>[number]) 
 
 bridge.onStatus(() => {
   void broadcastStatus();
-  if (bridge.status === "connected") void refreshPanel();
+  if (bridge.status === "connected") {
+    void refreshPanel();
+    void syncToolConfig();
+  }
 });
 
 // ---- tool requests (with restart recovery, NFA-04) ---------------------------------------------------------------------
@@ -119,7 +123,19 @@ async function postResult(res: ToolResult) {
   }
 }
 
+async function syncToolConfig() {
+  // JS-05: tell the bridge when the JavaScript tool is forbidden so pi stops offering it to the model
+  try {
+    const s = await getSettings();
+    setDebug(s.debug);
+    await bridgeRequest("PUT", "/v1/config", { javascriptTool: s.jsToolEnabled });
+  } catch (e) {
+    log.debug("syncToolConfig failed", String(e));
+  }
+}
+
 async function handleToolRequest(req: ToolRequest) {
+  log.debug("tool_request", req.tool, req.requestId);
   const done = results.get(req.requestId);
   if (done) return void postResult(done); // duplicate after reconnect: resend the stored result
   if (inflight.has(req.requestId) || handled.includes(req.requestId)) return;
@@ -132,6 +148,7 @@ async function handleToolRequest(req: ToolRequest) {
     res = { requestId: req.requestId, ok: false, content: [{ type: "text", text: String(e?.message ?? e) }] }; // NFA-06
   }
   results.set(req.requestId, res);
+  log.debug("tool_result", req.tool, req.requestId, res.ok);
   await postResult(res);
   inflight.delete(req.requestId);
   handled.push(req.requestId);
@@ -210,6 +227,9 @@ bridge.onEvent((ev: BridgeEvent) => {
   switch (ev.type) {
     case "hello":
       piSessionId = ev.sessionId;
+      // after a service-worker restart pi may be mid-run: restore (or drop) indicators accordingly
+      if (ev.running === true && !running) void onRunStarted();
+      else if (ev.running === false && running) void onSettled(false);
       void broadcastStatus();
       void refreshPanel();
       break;
@@ -352,9 +372,18 @@ onDetached(async (tabId, reason) => {
   }
 });
 
+/** The extension CSP forbids fetch(data:), so decode data URLs by hand. */
+function dataUrlToBlob(url: string): Blob {
+  const [head, b64] = url.split(",");
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: /data:([^;]+)/.exec(head)?.[1] ?? "image/jpeg" });
+}
+
 async function captureVisible(windowId: number): Promise<string> {
   const url = await chrome.tabs.captureVisibleTab(windowId, { format: "jpeg", quality: 75 });
-  const blob = await (await fetch(url)).blob();
+  const blob = dataUrlToBlob(url);
   const bmp = await createImageBitmap(blob);
   const t = targetSize(bmp.width, bmp.height);
   const cv = new OffscreenCanvas(t.width, t.height);
@@ -377,7 +406,7 @@ async function pick(c: { tabId: number; port: chrome.runtime.Port }, kind: "area
   if (kind === "area") {
     const tab = await chrome.tabs.get(c.tabId);
     const url = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 80 });
-    const bmp = await createImageBitmap(await (await fetch(url)).blob());
+    const bmp = await createImageBitmap(dataUrlToBlob(url));
     const sx = Math.round(res.x * res.dpr), sy = Math.round(res.y * res.dpr), sw = Math.max(1, Math.round(res.w * res.dpr)), sh = Math.max(1, Math.round(res.h * res.dpr));
     const t = targetSize(sw, sh);
     const cv = new OffscreenCanvas(t.width, t.height);
@@ -498,7 +527,12 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && (changes.settings || changes.grants)) {
     perms.invalidate();
     void broadcastStatus();
-    if (changes.settings) bridge.restart();
+    if (changes.settings) {
+      void syncToolConfig();
+      const o = changes.settings.oldValue?.port;
+      const n = changes.settings.newValue?.port;
+      if (o !== n) bridge.restart(); // only a changed port needs a new connection
+    }
   }
   if (area === "managed") {
     perms.invalidate();
@@ -644,6 +678,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
 async function init() {
   installListeners();
+  setDebug((await getSettings()).debug);
   await groups.restore();
   void chrome.alarms.create("keepalive", { periodInMinutes: 0.5 });
   void chrome.alarms.create("purge", { periodInMinutes: 60 * 12 });

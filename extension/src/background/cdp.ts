@@ -2,7 +2,8 @@
  * Debugger (CDP) manager: attach with timeout and de-duplication (INP-01..04), event routing, console and
  * network buffers (AUX-01..03), dialogs (AUX-04/05) and navigation tracking.
  */
-import type { ScaleContext } from "@pi-browser/shared";
+import type { ScaleContext } from "@pi-browser/shared/scaling";
+import { getSettings } from "../common/storage";
 
 export interface ConsoleEntry {
   ts: number;
@@ -132,6 +133,7 @@ export function attach(tabId: number): Promise<void> {
     }
     attached.add(tabId);
     const st = tabState(tabId);
+    st.postData = (await getSettings()).capturePostData;
     try {
       await send(tabId, "Runtime.enable");
       await send(tabId, "Network.enable", { maxPostDataSize: 65536 });

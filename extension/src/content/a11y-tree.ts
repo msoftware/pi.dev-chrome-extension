@@ -294,3 +294,6 @@ const api = {
 };
 
 (globalThis as unknown as { __piA11y: typeof api }).__piA11y = api;
+// TREE-01: the documented entry point generateTree(filter, depth, maxChars, refId) in the isolated world
+(globalThis as unknown as Record<string, unknown>).generateTree = (filter?: string, depth?: number, maxChars?: number, refId?: string) =>
+  api.generate({ filter, depth, maxChars, refId });

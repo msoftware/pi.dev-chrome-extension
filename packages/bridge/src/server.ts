@@ -291,7 +291,7 @@ export class BridgeServer {
     }
     // hello goes last so event ids stay in order for the client's Last-Event-ID bookkeeping.
     const info = this.opts.handlers.health();
-    writeEvent(res, ++this.seq, { type: "hello", sessionId: info.sessionId, model: info.model, bridgeVersion: BRIDGE_VERSION });
+    writeEvent(res, ++this.seq, { type: "hello", sessionId: info.sessionId, model: info.model, bridgeVersion: BRIDGE_VERSION, running: info.running });
     this.opts.handlers.onClientConnected();
   }
 }

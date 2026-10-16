@@ -38,6 +38,10 @@ export interface BridgeOptions {
   /** Provided by the headless host (API-02), which can replace sessions. */
   controller?: SessionController;
   tokenFile?: string;
+  /** Where messages for the operator go when there is no terminal UI (the headless host prints them). */
+  onNotify?: (message: string, level: "info" | "warning" | "error") => void;
+  /** Create a pairing code when the bridge starts (host mode has no /browser command to type). */
+  pairOnStart?: "if-unpaired" | "always";
 }
 
 const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
@@ -52,9 +56,15 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
     let server: BridgeServer | null = null;
     let ctxRef: ExtensionContext | null = null;
     let toolsOff = false;
+    let jsOff = false; // the extension reports the JavaScript tool as disabled (policy or setting)
     let permissionMode: PermissionMode = "ask";
     let startError: string | null = null;
     const progress = new Map<string, (msg: string) => void>();
+
+    const notify = (c: ExtensionContext, message: string, level: "info" | "warning" | "error" = "info") => {
+      if (options.onNotify) options.onNotify(message, level);
+      else c.ui.notify(message, level);
+    };
 
     const ctx = (): ExtensionContext => {
       if (!ctxRef) throw new HttpError(503, "pi session not ready");
@@ -230,6 +240,10 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
         pi.setThinkingLevel(body.thinkingLevel as any);
       }
       if (body.permissionMode) permissionMode = body.permissionMode;
+      if (body.javascriptTool !== undefined && (body.javascriptTool === false) !== jsOff) {
+        jsOff = body.javascriptTool === false;
+        applyToolState();
+      }
     }
 
     // ---- lifecycle ---------------------------------------------------------------------------------------------------------
@@ -243,7 +257,7 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
         tokens,
         log,
         handlers: {
-          health: () => ({ bridgeVersion: BRIDGE_VERSION, piVersion: PI_VERSION, model: currentModelId(), sessionId: sessionId() }),
+          health: () => ({ bridgeVersion: BRIDGE_VERSION, piVersion: PI_VERSION, model: currentModelId(), sessionId: sessionId(), running: ctxRef ? !ctxRef.isIdle() : false }),
           async prompt(body) {
             if (!body?.text && !body?.attachments?.length) throw new HttpError(400, "text required");
             server?.emit({ type: "user_message", text: body.text ?? "", source: "panel" });
@@ -291,7 +305,7 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
         startError = null;
       } catch (e: any) {
         startError = e?.code === "EADDRINUSE" ? `Port ${cfg.port} is in use (another pi instance?). Use --browser-port.` : String(e?.message ?? e);
-        c.ui.notify(`pi-browser-bridge: ${startError}`, "error");
+        notify(c, `pi-browser-bridge: ${startError}`, "error");
       }
     }
 
@@ -299,8 +313,12 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
       ctxRef = c;
       await startServer(c);
       applyToolState();
-      server?.emit({ type: "hello", sessionId: sessionId(), model: currentModelId(), bridgeVersion: BRIDGE_VERSION });
-      if (c.hasUI) c.ui.setStatus?.("browser", server ? `browser :${server.port}${tokens.paired ? "" : " (not paired)"}` : "browser off");
+      if (server && options.pairOnStart && (options.pairOnStart === "always" || !tokens.paired)) {
+        const { code } = tokens.createPairingCode();
+        notify(c, `Pairing code: ${code}  (valid 5 minutes). Enter it in the extension's side panel.`);
+      }
+      server?.emit({ type: "hello", sessionId: sessionId(), model: currentModelId(), bridgeVersion: BRIDGE_VERSION, running: !c.isIdle() });
+      if (c.hasUI && !options.onNotify) c.ui.setStatus?.("browser", server ? `browser :${server.port}${tokens.paired ? "" : " (not paired)"}` : "browser off");
     });
 
     pi.on("session_shutdown", async () => {
@@ -314,7 +332,7 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
     function applyToolState() {
       const active = new Set(pi.getActiveTools());
       for (const n of TOOL_NAMES) {
-        if (toolsOff || cfg.disabledTools.includes(n)) active.delete(n);
+        if (toolsOff || cfg.disabledTools.includes(n) || (jsOff && n === "javascript_tool")) active.delete(n);
         else active.add(n);
       }
       pi.setActiveTools([...active]);
@@ -363,19 +381,19 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
         switch (sub || "status") {
           case "pair": {
             const { code, expiresAt } = tokens.createPairingCode();
-            c.ui.notify(`Pairing code: ${code}  (valid until ${new Date(expiresAt).toLocaleTimeString()}). Enter it in the extension's side panel.`, "info");
+            notify(c, `Pairing code: ${code}  (valid until ${new Date(expiresAt).toLocaleTimeString()}). Enter it in the extension's side panel.`);
             return;
           }
           case "revoke": {
             const n = tokens.revoke(arg);
-            c.ui.notify(n ? `Revoked ${n} paired browser(s).` : "No matching paired browser.", "info");
+            notify(c, n ? `Revoked ${n} paired browser(s).` : "No matching paired browser.");
             return;
           }
           case "tools": {
-            if (arg !== "on" && arg !== "off") return void c.ui.notify("Usage: /browser tools on|off", "warning");
+            if (arg !== "on" && arg !== "off") return void notify(c, "Usage: /browser tools on|off", "warning");
             toolsOff = arg === "off";
             applyToolState();
-            c.ui.notify(`Browser tools ${toolsOff ? "disabled" : "enabled"}.`, "info");
+            notify(c, `Browser tools ${toolsOff ? "disabled" : "enabled"}.`);
             return;
           }
           case "new": {
@@ -392,7 +410,7 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
               `Tools: ${toolsOff ? "off" : "on"}  Mode: ${permissionMode}`,
               code ? `Pairing code: ${code.code}` : "No pairing code active. Run /browser pair.",
             ];
-            c.ui.notify(lines.join("\n"), "info");
+            notify(c, lines.join("\n"));
           }
         }
       },

@@ -40,7 +40,7 @@ export interface ToolProgress {
 export type RunState = "started" | "ended" | "settled";
 
 export type BridgeEvent =
-  | { type: "hello"; sessionId: string; model: string | null; bridgeVersion: string }
+  | { type: "hello"; sessionId: string; model: string | null; bridgeVersion: string; /** the agent is working right now (lets a restarted extension restore its indicators) */ running?: boolean }
   | { type: "run_state"; state: RunState; aborted?: boolean }
   | { type: "assistant_delta"; text: string }
   | { type: "assistant_message"; text: string; thinking?: string }
@@ -69,6 +69,7 @@ export interface PromptBody {
 }
 
 export interface HealthResponse {
+  running?: boolean;
   bridgeVersion: string;
   piVersion: string;
   paired: boolean;
@@ -90,6 +91,8 @@ export interface ModelsResponse {
 }
 
 export interface ConfigBody {
+  /** The extension's enterprise policy or settings forbid the javascript_tool: stop offering it to the model (JS-05). */
+  javascriptTool?: boolean;
   model?: string;
   thinkingLevel?: string;
   permissionMode?: PermissionMode;

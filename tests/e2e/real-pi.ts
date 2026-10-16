@@ -99,3 +99,38 @@ export class RealPi {
     fs.rmSync(this.dir, { recursive: true, force: true });
   }
 }
+
+/** The headless host (API-02): pi through the SDK, no terminal. */
+export class HostProcess {
+  proc!: ChildProcessWithoutNullStreams;
+  out = "";
+  port = 0;
+  dir = fs.mkdtempSync(path.join(os.tmpdir(), "host-"));
+  dump = path.join(this.dir, "requests.jsonl");
+
+  async start(scenario: string) {
+    this.port = await freePort();
+    const cli = path.join(ROOT, "packages/host/bin/pi-browser-host.mjs");
+    this.proc = spawn(process.execPath, [cli, "--no-session", "--provider", "fakellm", "--model", "script", "--browser-port", String(this.port), "-e", path.join(ROOT, "tests/e2e/fixtures/fake-llm.ts")], {
+      cwd: ROOT,
+      env: { ...process.env, PI_CODING_AGENT_DIR: path.join(this.dir, "agent"), FAKE_LLM_SCENARIO: scenario, FAKE_LLM_DUMP: this.dump, PI_OFFLINE: "1" },
+    });
+    this.proc.stdout.on("data", (d) => (this.out += String(d)));
+    this.proc.stderr.on("data", (d) => (this.out += String(d)));
+    const t = Date.now();
+    while (!/pi-browser-host ready/.test(this.out)) {
+      if (Date.now() - t > 40_000) throw new Error(`host did not start:\n${this.out}`);
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  }
+  code(): string {
+    const m = /Pairing code: (\d{6})/.exec(this.out);
+    if (!m) throw new Error(`no pairing code in host output:\n${this.out}`);
+    return m[1];
+  }
+  async stop() {
+    this.proc.kill("SIGTERM");
+    await new Promise((r) => setTimeout(r, 300));
+    fs.rmSync(this.dir, { recursive: true, force: true });
+  }
+}

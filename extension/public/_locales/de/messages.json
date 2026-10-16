@@ -332,6 +332,9 @@
   "jsTool": {
     "message": "JavaScript-Werkzeug erlauben (mächtigstes, riskantestes)"
   },
+  "jsTimeout": {
+    "message": "Zeitlimit des JavaScript-Werkzeugs (Sekunden)"
+  },
   "savedGrants": {
     "message": "Gespeicherte „Immer“-Freigaben"
   },
@@ -358,6 +361,12 @@
   },
   "notifySound": {
     "message": "Ton bei Benachrichtigungen abspielen"
+  },
+  "capturePostData": {
+    "message": "Anfragekörper (bis 64 KB) im Netzwerkprotokoll aufzeichnen (Header wie Cookies werden nie aufgezeichnet)"
+  },
+  "debugLog": {
+    "message": "Debug-Log in die Service-Worker-Konsole schreiben (nur Werkzeugnamen, kein Seiteninhalt)"
   },
   "name": {
     "message": "Name"

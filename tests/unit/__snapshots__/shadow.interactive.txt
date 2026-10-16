@@ -1,0 +1,2 @@
+button "Buy now" [ref_1]
+link "Slotted link" [ref_2] href="/more"

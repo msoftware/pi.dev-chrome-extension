@@ -132,3 +132,77 @@ test("real pi: Stop in the panel aborts the real run (SEC-13) and /browser tools
     await h.close();
   }
 });
+
+test("headless host (API-02): the panel is the only surface; sessions can be replaced from it", async () => {
+  const { HostProcess } = await import("./real-pi");
+  const site = await startSite();
+  const host = new HostProcess();
+  await host.start("browse");
+  const userDir = fs.mkdtempSync(path.join(os.tmpdir(), "pw-host-"));
+  const ctx = await chromium.launchPersistentContext(userDir, {
+    executablePath: process.env.CHROME_PATH || (fs.existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined),
+    headless: false,
+    ignoreDefaultArgs: ["--disable-extensions"],
+    args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`, "--disable-features=DisableLoadExtensionCommandLineSwitch", "--headless=new", "--no-sandbox"],
+    viewport: { width: 1200, height: 800 },
+  });
+  try {
+    let [sw] = ctx.serviceWorkers();
+    if (!sw) sw = await ctx.waitForEvent("serviceworker");
+    for (let i = 0; i < 50 && !(await sw.evaluate(() => !!chrome?.storage?.local).catch(() => false)); i++) await new Promise((r) => setTimeout(r, 100));
+    const extId = new URL(sw.url()).host;
+    await sw.evaluate(async (p) => chrome.storage.local.set({ settings: { port: p, permissionMode: "auto", allowedDomains: ["localhost", "127.0.0.1"] } }), host.port);
+    const page = await ctx.newPage();
+    await page.goto(`${site.a}/index.html`);
+    const tabId = await sw.evaluate(async (u) => (await chrome.tabs.query({})).find((t) => t.url === u)!.id!, page.url());
+    const panel = await ctx.newPage();
+    await panel.goto(`chrome-extension://${extId}/sidepanel.html?tabId=${tabId}`);
+    await expect(panel.getByTestId("status")).toHaveText(/Pairing required|Kopplung nötig/, { timeout: 20_000 });
+    await panel.getByTestId("pair-input").fill(host.code());
+    await panel.getByRole("button", { name: /^(Pair|Koppeln)$/ }).click();
+    await expect(panel.getByTestId("status")).toHaveText(/Connected|Verbunden/, { timeout: 20_000 });
+    await page.bringToFront();
+    await panel.getByTestId("input").fill("click the increment button");
+    await panel.getByTestId("send").click();
+    await expect(page.locator("#count")).toHaveText("1", { timeout: 40_000 });
+    await expect(panel.getByTestId("msg-assistant").last()).toContainText("Finished", { timeout: 40_000 });
+    // new session from the panel: the host replaces its session; the panel reconnects and the chat is empty again
+    await panel.getByRole("button", { name: /New chat|Neuer Chat/ }).click();
+    await expect(panel.getByTestId("msg-assistant")).toHaveCount(0, { timeout: 10_000 });
+    await expect(panel.getByTestId("status")).toHaveText(/Connected|Verbunden/, { timeout: 20_000 });
+    await page.bringToFront();
+    await page.locator("#btn").evaluate(() => ((document.getElementById("count") as HTMLElement).textContent = "0"));
+    await panel.getByTestId("input").fill("again please");
+    await panel.getByTestId("send").click();
+    await expect(page.locator("#count")).toHaveText("1", { timeout: 40_000 });
+  } finally {
+    await ctx.close().catch(() => {});
+    await host.stop();
+    await site.close();
+    fs.rmSync(userDir, { recursive: true, force: true });
+  }
+});
+
+test("real pi: a JavaScript tool disabled in the extension is not offered to the model (JS-05)", async () => {
+  const h = await boot("browse");
+  try {
+    await h.sw.evaluate(async () => {
+      const cur = (await chrome.storage.local.get("settings")).settings;
+      await chrome.storage.local.set({ settings: { ...cur, jsToolEnabled: false } });
+    });
+    const page = await h.ctx.newPage();
+    await page.goto(`${h.site.a}/index.html`);
+    const tabId = await tabIdOf(h.env, page);
+    const panel = await openPanel(h.env, tabId);
+    await pairPanel(panel, h.pi);
+    await page.bringToFront();
+    await panel.getByTestId("input").fill("click the increment button");
+    await panel.getByTestId("send").click();
+    await expect(panel.getByTestId("msg-assistant").last()).toContainText("Finished", { timeout: 40_000 });
+    const first = h.pi.requests()[0];
+    expect(first.tools).toContain("read_page");
+    expect(first.tools).not.toContain("javascript_tool");
+  } finally {
+    await h.close();
+  }
+});

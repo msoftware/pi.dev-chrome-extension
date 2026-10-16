@@ -1,0 +1,11 @@
+link "Home" [ref_1] href="/"
+link "Pricing" [ref_2] href="/pricing"
+textbox "you@example.com" [ref_3] type="email" placeholder="you@example.com" value="ada@example.com"
+textbox "Password" [ref_4] type="password" value="[value redacted]"
+textbox "Card number" [ref_5] type="text" value="[value redacted]"
+combobox "Country" [ref_6]
+ option "Germany" (selected) value="de"
+ option "Austria" value="at"
+checkbox "Remember me" [ref_7] type="checkbox" (checked)
+button "Sign in" [ref_8] type="submit"
+link "Forgot your password?" [ref_9] href="/forgot"

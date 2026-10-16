@@ -1,0 +1,22 @@
+header [ref_1]
+ nav "Primary" [ref_2]
+  link "Home" [ref_3] href="/"
+  link "Pricing" [ref_4] href="/pricing"
+main [ref_5]
+ heading "Sign in to your account" [ref_6]
+ form "Login" [ref_7]
+  label "E-mail address" [ref_8]
+  textbox "you@example.com" [ref_9] type="email" placeholder="you@example.com" value="ada@example.com"
+  label "Password" [ref_10]
+  textbox "Password" [ref_11] type="password" value="[value redacted]"
+  label "Card number" [ref_12]
+  textbox "Card number" [ref_13] type="text" value="[value redacted]"
+  label "Country" [ref_14]
+  combobox "Country" [ref_15]
+   option "Germany" (selected) value="de"
+   option "Austria" value="at"
+  checkbox "Remember me" [ref_16] type="checkbox" (checked)
+  label "Remember me" [ref_17]
+  button "Sign in" [ref_18] type="submit"
+  link "Forgot your password?" [ref_19] href="/forgot"
+footer "© 2026 Example Corp" [ref_20]

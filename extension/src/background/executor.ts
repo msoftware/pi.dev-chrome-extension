@@ -264,7 +264,7 @@ export class ToolExecutor {
         if (!isHttpUrl(tab.url)) throw new ToolError("JavaScript can only run on http(s) pages.");
         await env.authorize({ tabUrl: tab.url ?? "", preview: String(a.text).slice(0, 1500) });
         await env.guard(tabId, "running JavaScript");
-        return runJavaScript(env, tabId, String(a.text));
+        return runJavaScript(env, tabId, String(a.text), Math.max(1, env.settings.jsTimeoutSeconds || 30) * 1000);
       }
       case "tabs_close":
         return this.tabsClose(env, tabId);

@@ -356,3 +356,23 @@ test("shortcuts_list / shortcuts_execute (UI-21)", async () => {
   await expectEventually(() => env.pi.prompts.length > n);
   expect(env.pi.prompts[env.pi.prompts.length - 1].text).toBe("Say hi");
 });
+
+test("JS-05: a disabled JavaScript tool errors with a pointer to the alternatives, also inside a batch", async () => {
+  await freshPage(`${env.site.a}/index.html`);
+  await env.sw.evaluate(async () => {
+    const cur = (await chrome.storage.local.get("settings")).settings;
+    await chrome.storage.local.set({ settings: { ...cur, jsToolEnabled: false } });
+  });
+  await new Promise((r) => setTimeout(r, 300));
+  const direct = await env.pi.tool("javascript_tool", { tabId, action: "javascript_exec", text: "1+1" });
+  expect(direct.ok).toBe(false);
+  expect(txt(direct)).toMatch(/disabled/);
+  for (const t of ["read_page", "get_page_text", "find", "form_input", "computer"]) expect(txt(direct)).toContain(t);
+  const batch = await env.pi.tool("browser_batch", { tabId, actions: [{ name: "javascript_tool", input: { action: "javascript_exec", text: "1+1" } }] });
+  expect(batch.ok).toBe(false);
+  expect(txt(batch)).toMatch(/disabled/);
+  await env.sw.evaluate(async () => {
+    const cur = (await chrome.storage.local.get("settings")).settings;
+    await chrome.storage.local.set({ settings: { ...cur, jsToolEnabled: true } });
+  });
+});

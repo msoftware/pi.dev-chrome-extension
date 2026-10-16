@@ -1,0 +1,3 @@
+heading "Card title" [ref_1]
+button "Buy now" [ref_2]
+link "Slotted link" [ref_3] href="/more"

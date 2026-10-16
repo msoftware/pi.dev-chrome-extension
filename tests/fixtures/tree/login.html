@@ -1,0 +1,13 @@
+<!doctype html><html><head><title>Sign in</title><style>.x{}</style><script>var a=1</script></head><body>
+<header><nav aria-label="Primary"><a href="/">Home</a><a href="/pricing">Pricing</a></nav></header>
+<main><h1>Sign in to your account</h1>
+<form aria-label="Login">
+  <label for="email">E-mail address</label><input id="email" type="email" placeholder="you@example.com" value="ada@example.com">
+  <label for="pw">Password</label><input id="pw" type="password" value="correct horse battery staple">
+  <label for="cc">Card number</label><input id="cc" type="text" autocomplete="cc-number" value="4111111111111111">
+  <label for="country">Country</label><select id="country"><option value="de" selected>Germany</option><option value="at">Austria</option></select>
+  <input type="checkbox" id="remember" checked><label for="remember">Remember me</label>
+  <button type="submit">Sign in</button>
+  <a href="/forgot">Forgot your password?</a>
+  <input type="hidden" name="csrf" value="SECRETTOKEN">
+</form></main><footer>© 2026 Example Corp</footer></body></html>

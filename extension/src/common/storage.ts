@@ -9,9 +9,15 @@ export interface Settings {
   blockedDomains: string[];
   alwaysAskDomains: string[];
   jsToolEnabled: boolean;
+  /** JS-02: javascript_tool timeout in seconds (default 30). */
+  jsTimeoutSeconds: number;
   showThinking: boolean;
   notifySound: boolean;
   gifQuality: number;
+  /** AUX-03: record request bodies (up to 64 KB) in read_network_requests. Off by default. */
+  capturePostData: boolean;
+  /** NFA-14: extension debug log in the service worker console. Off by default. */
+  debug: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -23,9 +29,12 @@ export const DEFAULT_SETTINGS: Settings = {
   blockedDomains: [],
   alwaysAskDomains: [...DEFAULT_ALWAYS_ASK_DOMAINS],
   jsToolEnabled: true,
+  jsTimeoutSeconds: 30,
   showThinking: false,
   notifySound: true,
   gifQuality: 10,
+  capturePostData: false,
+  debug: false,
 };
 
 export interface ManagedPolicy {

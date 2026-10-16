@@ -332,6 +332,9 @@
   "jsTool": {
     "message": "Allow the JavaScript tool (most powerful, highest risk)"
   },
+  "jsTimeout": {
+    "message": "JavaScript tool timeout (seconds)"
+  },
   "savedGrants": {
     "message": "Saved \"always\" approvals"
   },
@@ -358,6 +361,12 @@
   },
   "notifySound": {
     "message": "Play a sound for notifications"
+  },
+  "capturePostData": {
+    "message": "Record request bodies (up to 64 KB) in the network log (headers like cookies are never recorded)"
+  },
+  "debugLog": {
+    "message": "Write a debug log to the service worker console (tool names only, no page content)"
   },
   "name": {
     "message": "Name"
