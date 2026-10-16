@@ -1,1 +1,23 @@
-console.log("x");
+import { t } from "../common/i18n";
+import "../common/theme.css";
+
+const q = new URLSearchParams(location.search);
+const domain = q.get("domain") ?? "";
+document.title = t("blockedTitle");
+const root = document.getElementById("root")!;
+root.innerHTML = "";
+const main = document.createElement("main");
+main.style.cssText = "max-width:520px;margin:12vh auto;padding:0 20px;text-align:center";
+const h = document.createElement("h1");
+h.textContent = t("blockedTitle");
+const p = document.createElement("p");
+p.textContent = t("blockedBody", domain);
+const small = document.createElement("p");
+small.className = "muted small";
+small.textContent = t("blockedPageHint");
+const b = document.createElement("button");
+b.className = "primary";
+b.textContent = t("settings");
+b.onclick = () => chrome.runtime.openOptionsPage();
+main.append(h, p, small, b);
+root.append(main);

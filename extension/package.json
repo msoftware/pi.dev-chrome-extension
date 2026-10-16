@@ -3,18 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": { "build": "vite build", "dev": "vite" },
+  "scripts": {
+    "prebuild": "node scripts/build-locales.mjs",
+    "build": "vite build",
+    "dev": "vite"
+  },
   "dependencies": {
     "@pi-browser/shared": "0.1.0",
     "dompurify": "^3.2.0",
+    "katex": "^0.16.47",
     "marked": "^15.0.0",
+    "mermaid": "^11.17.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "shiki": "^1.29.2",
     "tldts": "^6.1.0"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.28",
     "@types/chrome": "^0.0.280",
+    "@types/katex": "^0.16.8",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",

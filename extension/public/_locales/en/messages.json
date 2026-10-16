@@ -1,1 +1,455 @@
-{ "extName": { "message": "Browser Agent" }, "extDescription": { "message": "Lets a local pi coding agent see and operate your browser." }, "actionTitle": { "message": "Open Browser Agent" }, "cmdToggle": { "message": "Show or hide the side panel" } }
+{
+  "extName": {
+    "message": "Browser Agent"
+  },
+  "extDescription": {
+    "message": "Lets a local pi coding agent see and operate your browser."
+  },
+  "actionTitle": {
+    "message": "Open Browser Agent"
+  },
+  "cmdToggle": {
+    "message": "Show or hide the side panel"
+  },
+  "unsupportedBrowser": {
+    "message": "This browser does not support the side panel API. Please use Chrome 116 or newer."
+  },
+  "notifApprovalTitle": {
+    "message": "Approval needed"
+  },
+  "notifDoneTitle": {
+    "message": "Task finished"
+  },
+  "notifDoneBody": {
+    "message": "The agent has finished its work. Click to return to the tab."
+  },
+  "indStop": {
+    "message": "Stop agent"
+  },
+  "indStatic": {
+    "message": "Agent active in this tab group"
+  },
+  "indOpenChat": {
+    "message": "Open chat"
+  },
+  "indHide": {
+    "message": "Hide"
+  },
+  "indStopFallback": {
+    "message": "Could not reach the agent. Close the side panel to stop it."
+  },
+  "connection": {
+    "message": "Connection"
+  },
+  "statusConnected": {
+    "message": "Connected"
+  },
+  "statusConnecting": {
+    "message": "Connecting…"
+  },
+  "statusDisconnected": {
+    "message": "Not connected"
+  },
+  "statusPairing": {
+    "message": "Pairing required"
+  },
+  "startHelp": {
+    "message": "The bridge is not reachable on port $P1$. Start pi with the bridge loaded; the panel reconnects automatically:",
+    "placeholders": {
+      "P1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pairHelp": {
+    "message": "In pi, run /browser pair and enter the 6-digit code here."
+  },
+  "pairAgain": {
+    "message": "The pairing is no longer valid. Run /browser pair in pi and enter the new code."
+  },
+  "pairCode": {
+    "message": "Pairing code"
+  },
+  "pair": {
+    "message": "Pair"
+  },
+  "unpair": {
+    "message": "Forget pairing"
+  },
+  "swReconnecting": {
+    "message": "Reconnecting to the extension…"
+  },
+  "history": {
+    "message": "Chat history"
+  },
+  "newChat": {
+    "message": "New chat"
+  },
+  "noSessions": {
+    "message": "No earlier sessions."
+  },
+  "shortcuts": {
+    "message": "Shortcuts"
+  },
+  "noShortcuts": {
+    "message": "No saved shortcuts yet. Create them in the settings."
+  },
+  "run": {
+    "message": "Run"
+  },
+  "recordWorkflow": {
+    "message": "Record a workflow"
+  },
+  "stopRecording": {
+    "message": "Stop recording and save"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "viewingPast": {
+    "message": "You are viewing an earlier session (read-only)."
+  },
+  "backToCurrent": {
+    "message": "Back to the current session"
+  },
+  "emptyChat": {
+    "message": "Tell the agent what to do in your browser."
+  },
+  "fromTerminal": {
+    "message": "from terminal"
+  },
+  "thinking": {
+    "message": "Thinking"
+  },
+  "running": {
+    "message": "running"
+  },
+  "done": {
+    "message": "done"
+  },
+  "failed": {
+    "message": "failed"
+  },
+  "progress": {
+    "message": "Progress"
+  },
+  "screenshot": {
+    "message": "Screenshot"
+  },
+  "imageRemoved": {
+    "message": "Image removed to save space"
+  },
+  "messageLabel": {
+    "message": "Message to the agent"
+  },
+  "placeholder": {
+    "message": "Ask the agent to do something… (Enter to send, Shift+Enter for a new line)"
+  },
+  "placeholderRunning": {
+    "message": "Add a message for the running task…"
+  },
+  "send": {
+    "message": "Send"
+  },
+  "steer": {
+    "message": "Add"
+  },
+  "stop": {
+    "message": "Stop"
+  },
+  "model": {
+    "message": "Model"
+  },
+  "noModel": {
+    "message": "No model"
+  },
+  "permissionMode": {
+    "message": "Permission mode"
+  },
+  "modeAsk": {
+    "message": "Ask before acting"
+  },
+  "modePlan": {
+    "message": "Follow a plan"
+  },
+  "modeAuto": {
+    "message": "Automatic"
+  },
+  "autoWarning": {
+    "message": "Automatic mode acts without asking; every step is checked against your task by a second model call. Sensitive sites still ask."
+  },
+  "lockedByPolicy": {
+    "message": "Set by your organization's policy"
+  },
+  "attachments": {
+    "message": "Attachments"
+  },
+  "remove": {
+    "message": "Remove"
+  },
+  "captureTab": {
+    "message": "Attach a screenshot of this page"
+  },
+  "pickArea": {
+    "message": "Select an area of the page"
+  },
+  "pickElement": {
+    "message": "Pick an element on the page"
+  },
+  "areaShot": {
+    "message": "Selected area"
+  },
+  "pageShot": {
+    "message": "Page screenshot"
+  },
+  "elementPicked": {
+    "message": "Element"
+  },
+  "privacyCloud": {
+    "message": "Screenshots and page contents are sent to the model provider you chose in pi."
+  },
+  "privacyLocal": {
+    "message": "You use a local model: screenshots and page contents stay on this computer."
+  },
+  "dismiss": {
+    "message": "Dismiss"
+  },
+  "approveTitle": {
+    "message": "Allow this action?"
+  },
+  "approvePlan": {
+    "message": "Approve the plan?"
+  },
+  "domain": {
+    "message": "Domain"
+  },
+  "domains": {
+    "message": "Domains"
+  },
+  "tool": {
+    "message": "Tool"
+  },
+  "permission": {
+    "message": "Permission"
+  },
+  "allowOnce": {
+    "message": "Allow once"
+  },
+  "allowAlways": {
+    "message": "Always allow on $P1$",
+    "placeholders": {
+      "P1": {
+        "content": "$1"
+      }
+    }
+  },
+  "deny": {
+    "message": "Deny"
+  },
+  "onceOnlyNote": {
+    "message": "This kind of page or field always needs a one-time approval."
+  },
+  "perm_NAVIGATE": {
+    "message": "Navigate to pages"
+  },
+  "perm_READ_PAGE_CONTENT": {
+    "message": "Read page content"
+  },
+  "perm_CLICK": {
+    "message": "Click and move the mouse"
+  },
+  "perm_TYPE": {
+    "message": "Type text"
+  },
+  "perm_EXECUTE_JS": {
+    "message": "Run JavaScript"
+  },
+  "perm_UPLOAD": {
+    "message": "Upload files or images"
+  },
+  "perm_PLAN_APPROVAL": {
+    "message": "Approve a plan"
+  },
+  "perm_DOMAIN_TRANSITION": {
+    "message": "Leave the current site"
+  },
+  "pageDialog": {
+    "message": "The page shows a dialog"
+  },
+  "promptAnswer": {
+    "message": "Your answer"
+  },
+  "accept": {
+    "message": "OK"
+  },
+  "blockedTitle": {
+    "message": "This site is blocked"
+  },
+  "blockedBody": {
+    "message": "The domain $P1$ is on the blocked list. The agent may not open it.",
+    "placeholders": {
+      "P1": {
+        "content": "$1"
+      }
+    }
+  },
+  "blockedPageHint": {
+    "message": "The list comes from your settings or your organization's policy."
+  },
+  "optConnection": {
+    "message": "Connection"
+  },
+  "optPort": {
+    "message": "Bridge port (127.0.0.1)"
+  },
+  "pairingRemoved": {
+    "message": "Pairing removed. Pair again from the side panel."
+  },
+  "optPermissions": {
+    "message": "Permissions and domains"
+  },
+  "allowedDomains": {
+    "message": "Allowed domains"
+  },
+  "allowedHint": {
+    "message": "No question for reading and navigating. One per line."
+  },
+  "alwaysAskDomains": {
+    "message": "Always ask"
+  },
+  "alwaysAskHint": {
+    "message": "Banking, payments, government, health, password managers. Only one-time approvals."
+  },
+  "blockedDomains": {
+    "message": "Blocked domains"
+  },
+  "blockedHint": {
+    "message": "The agent can never use these."
+  },
+  "policyAdds": {
+    "message": "Added by policy"
+  },
+  "jsTool": {
+    "message": "Allow the JavaScript tool (most powerful, highest risk)"
+  },
+  "savedGrants": {
+    "message": "Saved \"always\" approvals"
+  },
+  "noGrants": {
+    "message": "None."
+  },
+  "revoke": {
+    "message": "Revoke"
+  },
+  "optAgent": {
+    "message": "Agent"
+  },
+  "groupTitle": {
+    "message": "Tab group title"
+  },
+  "groupColor": {
+    "message": "Tab group colour"
+  },
+  "gifQuality": {
+    "message": "GIF quality (1 best – 30 smallest)"
+  },
+  "showThinking": {
+    "message": "Show the model's thinking blocks"
+  },
+  "notifySound": {
+    "message": "Play a sound for notifications"
+  },
+  "name": {
+    "message": "Name"
+  },
+  "schedule": {
+    "message": "Schedule"
+  },
+  "never": {
+    "message": "Never (manual only)"
+  },
+  "daily": {
+    "message": "Daily"
+  },
+  "weekly": {
+    "message": "Weekly"
+  },
+  "monthly": {
+    "message": "Monthly"
+  },
+  "timeOfDay": {
+    "message": "Time"
+  },
+  "weekday": {
+    "message": "Weekday"
+  },
+  "dayOfMonth": {
+    "message": "Day of month"
+  },
+  "promptLabel": {
+    "message": "Prompt"
+  },
+  "promptHint": {
+    "message": "Use {{name}} for parameters that are asked when you run it."
+  },
+  "next": {
+    "message": "next"
+  },
+  "edit": {
+    "message": "Edit"
+  },
+  "delete": {
+    "message": "Delete"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "saved": {
+    "message": "Saved"
+  },
+  "optLog": {
+    "message": "Activity log"
+  },
+  "logHelp": {
+    "message": "Every tool call is logged locally and kept for 30 days."
+  },
+  "filter": {
+    "message": "Filter"
+  },
+  "exportJson": {
+    "message": "Export JSON"
+  },
+  "exportCsv": {
+    "message": "Export CSV"
+  },
+  "refresh": {
+    "message": "Refresh"
+  },
+  "time": {
+    "message": "Time"
+  },
+  "action": {
+    "message": "Action"
+  },
+  "decision": {
+    "message": "Decision"
+  },
+  "result": {
+    "message": "Result"
+  },
+  "optData": {
+    "message": "Data"
+  },
+  "dataHelp": {
+    "message": "Tokens, approvals, sessions, screenshots and the log are stored only in this browser profile. Nothing is sent anywhere except to your local bridge."
+  },
+  "deleteAll": {
+    "message": "Delete all data"
+  },
+  "confirmDeleteAll": {
+    "message": "Delete the pairing, all approvals, settings, screenshots, shortcuts and the log?"
+  },
+  "deletedAll": {
+    "message": "All data was deleted."
+  }
+}

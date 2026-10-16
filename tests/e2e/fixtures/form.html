@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Form fixture</title>
+<style>body{font:16px sans-serif;margin:20px} label{display:block;margin-top:8px} #state{white-space:pre;font-family:monospace;margin-top:16px;border:1px solid #888;padding:6px}</style>
+</head><body>
+<h1>Registration</h1>
+<div id="root"></div>
+<h2>Native form</h2>
+<form id="native" onsubmit="return false">
+  <label for="n-name">Native name</label><input id="n-name" name="name" type="text">
+  <label for="n-pass">Native password</label><input id="n-pass" name="pass" type="password" autocomplete="current-password">
+  <label for="n-country">Native country</label><select id="n-country"><option value="de">Germany</option><option value="at">Austria</option></select>
+  <label><input id="n-agree" type="checkbox"> Native agree</label>
+  <button id="n-submit" type="submit">Native submit</button>
+</form>
+<pre id="nstate"></pre>
+<script src="/vendor/react.js"></script>
+<script src="/vendor/react-dom.js"></script>
+<script>
+  // React controlled inputs: a plain `input.value = x` without the native setter + events would be reverted.
+  const e = React.createElement;
+  function App() {
+    const [s, setS] = React.useState({ first: "", email: "", pw: "", country: "de", agree: false, plan: "free" });
+    const set = (k) => (ev) => setS({ ...s, [k]: ev.target.type === "checkbox" ? ev.target.checked : ev.target.value });
+    return e("div", null,
+      e("h2", null, "React form"),
+      e("label", { htmlFor: "r-first" }, "First name"), e("input", { id: "r-first", value: s.first, onChange: set("first"), placeholder: "Your first name" }),
+      e("label", { htmlFor: "r-email" }, "Email"), e("input", { id: "r-email", type: "email", value: s.email, onChange: set("email") }),
+      e("label", { htmlFor: "r-pw" }, "Password"), e("input", { id: "r-pw", type: "password", value: s.pw, onChange: set("pw"), autoComplete: "new-password" }),
+      e("label", { htmlFor: "r-country" }, "Country"), e("select", { id: "r-country", value: s.country, onChange: set("country") }, e("option", { value: "de" }, "Germany"), e("option", { value: "at" }, "Austria")),
+      e("label", null, e("input", { id: "r-agree", type: "checkbox", checked: s.agree, onChange: set("agree") }), " I agree"),
+      e("fieldset", null, e("legend", null, "Plan"), ["free", "pro"].map(p => e("label", { key: p }, e("input", { type: "radio", name: "plan", value: p, checked: s.plan === p, onChange: set("plan") }), " " + p))),
+      e("button", { id: "r-submit", onClick: () => (window.__submitted = s) }, "Register"),
+      e("div", { id: "state" }, JSON.stringify({ ...s, pw: s.pw ? "*".repeat(s.pw.length) : "" }, null, 1)));
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(e(App));
+  window.__readPw = () => document.getElementById("r-pw").value;
+</script>
+</body></html>

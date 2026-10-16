@@ -219,10 +219,10 @@ export class ToolExecutor {
     const tabId = a.tabId as number;
     const tab = await assertInGroup(tabId, env.group.groupId); // UI-07 / SEC-07
     // TOOL-09
-    if (name !== "navigate" && isRestrictedPage(tab.url)) {
-      throw new ToolError(`This is a browser-internal or store page (${tab.url}) where only navigate is available. Navigate to a regular web page first.`);
+    if (name !== "navigate" && isRestrictedPage(tab.url || tab.pendingUrl)) {
+      throw new ToolError(`This is a browser-internal or store page (${tab.url || tab.pendingUrl}) where only navigate is available. Navigate to a regular web page first.`);
     }
-    await this.deps.ensureIndicators(tabId);
+    void this.deps.ensureIndicators(tabId); // never wait for the page here: it may be blocked by a dialog
     if (tab.url) tabState(tabId); // make sure state exists
 
     switch (name) {
@@ -352,6 +352,7 @@ export class ToolExecutor {
       await chrome.tabs.update(tabId, { url });
       const r = await done;
       if (r.error) throw new ToolError(`Navigation failed: ${r.error}`);
+      if (r.cancelled) throw new ToolError(`The page asked "leave this page?" and the dialog was cancelled, so the tab stayed on ${(await chrome.tabs.get(tabId)).url}. Retry with leaveDialog "accept" to leave anyway.`);
     }
     const t = await chrome.tabs.get(tabId);
     const notes = tabState(tabId).dialogNotes.filter((n) => !n.startsWith("prompt:"));
@@ -425,13 +426,19 @@ export class ToolExecutor {
 }
 
 /** Waits for the main frame of a tab to finish navigating (or fail), at most `ms`. */
-export function waitForLoad(tabId: number, ms: number): Promise<{ error?: string }> {
+export function waitForLoad(tabId: number, ms: number): Promise<{ error?: string; cancelled?: boolean }> {
+  const startedAt = Date.now();
   return new Promise((resolve) => {
     let finished = false;
-    const done = (r: { error?: string }) => {
+    const poll = setInterval(() => {
+      // a cancelled "leave page?" dialog means the navigation will never complete
+      if (tabState(tabId).leaveCancelledAt >= startedAt) done({ cancelled: true });
+    }, 100);
+    const done = (r: { error?: string; cancelled?: boolean }) => {
       if (finished) return;
       finished = true;
       clearTimeout(timer);
+      clearInterval(poll);
       chrome.webNavigation.onCompleted.removeListener(onOk);
       chrome.webNavigation.onErrorOccurred.removeListener(onErr);
       resolve(r);

@@ -1,0 +1,53 @@
+:root {
+  --bg: #fbf9f6;
+  --bg-2: #f1ede7;
+  --bg-3: #e7e1d8;
+  --fg: #1f1b16;
+  --fg-2: #5b534a;
+  --line: #d9d2c7;
+  --accent: #b4531a; /* white text on this reaches 5.4:1 */
+  --accent-fg: #ffffff;
+  --accent-soft: #f6e3d6;
+  --ok: #1b7a3d;
+  --warn: #8a5a00;
+  --err: #b3261e;
+  --code-bg: #f1ede7;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17140f;
+    --bg-2: #211d17;
+    --bg-3: #2d2820;
+    --fg: #f3eee7;
+    --fg-2: #b9b0a4;
+    --line: #3a342b;
+    --accent: #e0702c;
+    --accent-fg: #1a1208;
+    --accent-soft: #3a2616;
+    --ok: #5fd38a;
+    --warn: #f0b94d;
+    --err: #ff8a80;
+    --code-bg: #211d17;
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, select, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--line); background: var(--bg-2); border-radius: 8px; padding: 6px 12px; }
+button:hover { background: var(--bg-3); }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: transparent; font-weight: 600; }
+button.primary:hover { filter: brightness(1.08); }
+button.danger { color: var(--err); border-color: var(--err); background: transparent; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.link { border: 0; background: none; color: var(--accent); padding: 0 6px; text-decoration: underline; }
+button.icon { padding: 4px 8px; border-color: transparent; background: transparent; font-size: 16px; line-height: 1; border-radius: 6px; }
+button.icon:hover { background: var(--bg-3); }
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.muted { color: var(--fg-2); }
+.small { font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

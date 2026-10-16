@@ -8,9 +8,12 @@ export type IndicatorMsg =
   | { type: "HIDE_STATIC_INDICATOR" }
   | { type: "UPDATE_PHANTOM_CURSOR"; x: number; y: number };
 
+/**
+ * Failures are ignored, and so is a silent page: a page blocked by a modal dialog never answers, so the wait is bounded.
+ */
 export async function sendIndicator(tabId: number, msg: IndicatorMsg): Promise<void> {
   try {
-    await chrome.tabs.sendMessage(tabId, msg, { frameId: 0 });
+    await Promise.race([chrome.tabs.sendMessage(tabId, msg, { frameId: 0 }), new Promise((r) => setTimeout(r, 700))]);
   } catch {
     /* no receiver */
   }

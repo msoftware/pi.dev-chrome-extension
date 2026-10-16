@@ -8,7 +8,7 @@ import {
   jpegSize,
   targetSize,
 } from "@pi-browser/shared/scaling";
-import { ensureFocusEmulation, send, tabState } from "./cdp";
+import { attach, ensureFocusEmulation, send, tabState } from "./cdp";
 import { putShot, enforceShotBudget } from "../common/idb";
 import { sendIndicator, sleep } from "./indicators";
 import { callPage } from "./page";
@@ -39,6 +39,8 @@ export function newShotId(): string {
 
 async function viewport(tabId: number): Promise<Viewport> {
   try {
+    // A page that shows a modal dialog cannot run scripts; ask the browser instead.
+    if (tabState(tabId).dialog) throw new Error("dialog open");
     return await callPage<Viewport>(tabId, "viewportInfo");
   } catch {
     const m = await send<any>(tabId, "Page.getLayoutMetrics");
@@ -99,6 +101,7 @@ export async function capture(tabId: number, opts: CaptureOptions): Promise<Shot
   let restoreBg: (() => Promise<void>) | null = null;
   try {
     await opts.guard?.(); // SHOT-08
+    await attach(tabId);
     restoreBg = await prepareBackground(tabId);
     await sleep(30);
     const vp = await viewport(tabId);

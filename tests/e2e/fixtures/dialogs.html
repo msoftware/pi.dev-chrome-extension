@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Dialogs</title></head><body>
+<button id="alert" onclick="alert('Hello from alert'); document.getElementById('r').textContent='alert closed'">Show alert</button>
+<button id="confirm" onclick="document.getElementById('r').textContent='confirm: '+confirm('Really?')">Show confirm</button>
+<button id="prompt" onclick="document.getElementById('r').textContent='prompt: '+prompt('Name?', 'x')">Show prompt</button>
+<span id="r"></span>
+<script>addEventListener('beforeunload', e => { if (window.dirty) { e.preventDefault(); e.returnValue=''; } });</script>
+<button id="dirty" onclick="window.dirty=true">Make dirty</button>
+</body></html>

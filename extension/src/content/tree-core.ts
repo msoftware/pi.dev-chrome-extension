@@ -2,7 +2,7 @@
  * Accessibility-tree generator (requirements section 9). DOM-based, independent of the CDP accessibility API.
  * Pure with respect to `env`, so it can be unit-tested with jsdom snapshots.
  */
-import { isSensitiveField, REDACTED } from "@pi-browser/shared/sensitive";
+import { isSensitiveField, REDACTED } from "./sensitive";
 
 export interface TreeOptions {
   filter: string; // "all" | "interactive" | anything else (treated like interactive)

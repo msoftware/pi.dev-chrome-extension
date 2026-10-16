@@ -1,0 +1,18 @@
+@import "../common/theme.css";
+main { max-width: 860px; margin: 0 auto; padding: 24px 20px 60px; }
+h1 { font-size: 22px; } h2 { font-size: 17px; margin: 28px 0 10px; border-bottom: 1px solid var(--line); padding-bottom: 6px; } h3 { font-size: 14px; }
+.saved { color: var(--ok); font-size: 13px; font-weight: 400; }
+.field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.field input, .field select, .field textarea, .row input { padding: 7px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); width: 100%; }
+.field textarea { font-family: ui-monospace, monospace; font-size: 13px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.check { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; margin-bottom: 10px; }
+.row input { width: auto; flex: 1; min-width: 160px; }
+.grants { list-style: none; padding: 0; margin: 0 0 12px; } .grants li { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tablewrap { overflow-x: auto; max-height: 420px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; } th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { position: sticky; top: 0; background: var(--bg-2); }
+td.ok { color: var(--ok); } td.error, td.denied { color: var(--err); }
+@media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }

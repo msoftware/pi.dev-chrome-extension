@@ -1,1 +1,455 @@
-{ "extName": { "message": "Browser Agent" }, "extDescription": { "message": "Lets a local pi coding agent see and operate your browser." }, "actionTitle": { "message": "Open Browser Agent" }, "cmdToggle": { "message": "Show or hide the side panel" } }
+{
+  "extName": {
+    "message": "Browser-Agent"
+  },
+  "extDescription": {
+    "message": "Lässt einen lokalen pi-Coding-Agenten Ihren Browser sehen und bedienen."
+  },
+  "actionTitle": {
+    "message": "Browser-Agent öffnen"
+  },
+  "cmdToggle": {
+    "message": "Seitenpanel ein- oder ausblenden"
+  },
+  "unsupportedBrowser": {
+    "message": "Dieser Browser unterstützt die Seitenpanel-API nicht. Bitte Chrome 116 oder neuer verwenden."
+  },
+  "notifApprovalTitle": {
+    "message": "Freigabe nötig"
+  },
+  "notifDoneTitle": {
+    "message": "Aufgabe erledigt"
+  },
+  "notifDoneBody": {
+    "message": "Der Agent ist fertig. Klicken, um zum Tab zurückzukehren."
+  },
+  "indStop": {
+    "message": "Agent stoppen"
+  },
+  "indStatic": {
+    "message": "Agent aktiv in dieser Tab-Gruppe"
+  },
+  "indOpenChat": {
+    "message": "Chat öffnen"
+  },
+  "indHide": {
+    "message": "Ausblenden"
+  },
+  "indStopFallback": {
+    "message": "Der Agent ist nicht erreichbar. Schließen Sie das Seitenpanel, um ihn zu stoppen."
+  },
+  "connection": {
+    "message": "Verbindung"
+  },
+  "statusConnected": {
+    "message": "Verbunden"
+  },
+  "statusConnecting": {
+    "message": "Verbinde …"
+  },
+  "statusDisconnected": {
+    "message": "Getrennt"
+  },
+  "statusPairing": {
+    "message": "Kopplung nötig"
+  },
+  "startHelp": {
+    "message": "Die Bridge ist auf Port $P1$ nicht erreichbar. Starten Sie pi mit geladener Bridge; das Panel verbindet sich automatisch neu:",
+    "placeholders": {
+      "P1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pairHelp": {
+    "message": "Führen Sie in pi /browser pair aus und geben Sie den 6-stelligen Code hier ein."
+  },
+  "pairAgain": {
+    "message": "Die Kopplung ist nicht mehr gültig. Führen Sie in pi /browser pair aus und geben Sie den neuen Code ein."
+  },
+  "pairCode": {
+    "message": "Kopplungscode"
+  },
+  "pair": {
+    "message": "Koppeln"
+  },
+  "unpair": {
+    "message": "Kopplung entfernen"
+  },
+  "swReconnecting": {
+    "message": "Verbindung zur Erweiterung wird wiederhergestellt …"
+  },
+  "history": {
+    "message": "Verlauf"
+  },
+  "newChat": {
+    "message": "Neuer Chat"
+  },
+  "noSessions": {
+    "message": "Keine früheren Sitzungen."
+  },
+  "shortcuts": {
+    "message": "Shortcuts"
+  },
+  "noShortcuts": {
+    "message": "Noch keine Shortcuts. Legen Sie sie in den Einstellungen an."
+  },
+  "run": {
+    "message": "Ausführen"
+  },
+  "recordWorkflow": {
+    "message": "Workflow aufzeichnen"
+  },
+  "stopRecording": {
+    "message": "Aufzeichnung beenden und speichern"
+  },
+  "settings": {
+    "message": "Einstellungen"
+  },
+  "viewingPast": {
+    "message": "Sie sehen eine frühere Sitzung (nur lesen)."
+  },
+  "backToCurrent": {
+    "message": "Zurück zur aktuellen Sitzung"
+  },
+  "emptyChat": {
+    "message": "Sagen Sie dem Agenten, was er im Browser tun soll."
+  },
+  "fromTerminal": {
+    "message": "vom Terminal"
+  },
+  "thinking": {
+    "message": "Denken"
+  },
+  "running": {
+    "message": "läuft"
+  },
+  "done": {
+    "message": "erledigt"
+  },
+  "failed": {
+    "message": "fehlgeschlagen"
+  },
+  "progress": {
+    "message": "Fortschritt"
+  },
+  "screenshot": {
+    "message": "Screenshot"
+  },
+  "imageRemoved": {
+    "message": "Bild zur Platzersparnis entfernt"
+  },
+  "messageLabel": {
+    "message": "Nachricht an den Agenten"
+  },
+  "placeholder": {
+    "message": "Bitten Sie den Agenten um etwas … (Enter sendet, Umschalt+Enter = neue Zeile)"
+  },
+  "placeholderRunning": {
+    "message": "Nachricht zur laufenden Aufgabe hinzufügen …"
+  },
+  "send": {
+    "message": "Senden"
+  },
+  "steer": {
+    "message": "Einreihen"
+  },
+  "stop": {
+    "message": "Stopp"
+  },
+  "model": {
+    "message": "Modell"
+  },
+  "noModel": {
+    "message": "Kein Modell"
+  },
+  "permissionMode": {
+    "message": "Berechtigungsmodus"
+  },
+  "modeAsk": {
+    "message": "Vor Aktionen fragen"
+  },
+  "modePlan": {
+    "message": "Plan befolgen"
+  },
+  "modeAuto": {
+    "message": "Automatisch"
+  },
+  "autoWarning": {
+    "message": "Der automatische Modus handelt ohne Rückfrage; jeder Schritt wird per zweitem Modellaufruf gegen Ihre Aufgabe geprüft. Sensible Seiten fragen weiterhin."
+  },
+  "lockedByPolicy": {
+    "message": "Durch die Richtlinie Ihrer Organisation festgelegt"
+  },
+  "attachments": {
+    "message": "Anhänge"
+  },
+  "remove": {
+    "message": "Entfernen"
+  },
+  "captureTab": {
+    "message": "Screenshot dieser Seite anhängen"
+  },
+  "pickArea": {
+    "message": "Bereich der Seite auswählen"
+  },
+  "pickElement": {
+    "message": "Element auf der Seite auswählen"
+  },
+  "areaShot": {
+    "message": "Ausgewählter Bereich"
+  },
+  "pageShot": {
+    "message": "Seiten-Screenshot"
+  },
+  "elementPicked": {
+    "message": "Element"
+  },
+  "privacyCloud": {
+    "message": "Screenshots und Seiteninhalte gehen an den in pi gewählten Modellanbieter."
+  },
+  "privacyLocal": {
+    "message": "Sie nutzen ein lokales Modell: Screenshots und Seiteninhalte bleiben auf diesem Rechner."
+  },
+  "dismiss": {
+    "message": "Schließen"
+  },
+  "approveTitle": {
+    "message": "Diese Aktion erlauben?"
+  },
+  "approvePlan": {
+    "message": "Plan freigeben?"
+  },
+  "domain": {
+    "message": "Domain"
+  },
+  "domains": {
+    "message": "Domains"
+  },
+  "tool": {
+    "message": "Werkzeug"
+  },
+  "permission": {
+    "message": "Berechtigung"
+  },
+  "allowOnce": {
+    "message": "Einmal erlauben"
+  },
+  "allowAlways": {
+    "message": "Immer erlauben auf $P1$",
+    "placeholders": {
+      "P1": {
+        "content": "$1"
+      }
+    }
+  },
+  "deny": {
+    "message": "Ablehnen"
+  },
+  "onceOnlyNote": {
+    "message": "Diese Art von Seite oder Feld braucht immer eine einmalige Freigabe."
+  },
+  "perm_NAVIGATE": {
+    "message": "Seiten aufrufen"
+  },
+  "perm_READ_PAGE_CONTENT": {
+    "message": "Seiteninhalt lesen"
+  },
+  "perm_CLICK": {
+    "message": "Klicken und Maus bewegen"
+  },
+  "perm_TYPE": {
+    "message": "Text eingeben"
+  },
+  "perm_EXECUTE_JS": {
+    "message": "JavaScript ausführen"
+  },
+  "perm_UPLOAD": {
+    "message": "Dateien oder Bilder hochladen"
+  },
+  "perm_PLAN_APPROVAL": {
+    "message": "Plan freigeben"
+  },
+  "perm_DOMAIN_TRANSITION": {
+    "message": "Aktuelle Seite verlassen"
+  },
+  "pageDialog": {
+    "message": "Die Seite zeigt einen Dialog"
+  },
+  "promptAnswer": {
+    "message": "Ihre Antwort"
+  },
+  "accept": {
+    "message": "OK"
+  },
+  "blockedTitle": {
+    "message": "Diese Seite ist gesperrt"
+  },
+  "blockedBody": {
+    "message": "Die Domain $P1$ steht auf der Sperrliste. Der Agent darf sie nicht öffnen.",
+    "placeholders": {
+      "P1": {
+        "content": "$1"
+      }
+    }
+  },
+  "blockedPageHint": {
+    "message": "Die Liste stammt aus Ihren Einstellungen oder der Richtlinie Ihrer Organisation."
+  },
+  "optConnection": {
+    "message": "Verbindung"
+  },
+  "optPort": {
+    "message": "Bridge-Port (127.0.0.1)"
+  },
+  "pairingRemoved": {
+    "message": "Kopplung entfernt. Koppeln Sie erneut im Seitenpanel."
+  },
+  "optPermissions": {
+    "message": "Berechtigungen und Domains"
+  },
+  "allowedDomains": {
+    "message": "Erlaubte Domains"
+  },
+  "allowedHint": {
+    "message": "Keine Rückfrage beim Lesen und Navigieren. Eine pro Zeile."
+  },
+  "alwaysAskDomains": {
+    "message": "Immer fragen"
+  },
+  "alwaysAskHint": {
+    "message": "Banking, Zahlungen, Behörden, Gesundheit, Passwortmanager. Nur einmalige Freigaben."
+  },
+  "blockedDomains": {
+    "message": "Gesperrte Domains"
+  },
+  "blockedHint": {
+    "message": "Der Agent kann diese nie verwenden."
+  },
+  "policyAdds": {
+    "message": "Per Richtlinie ergänzt"
+  },
+  "jsTool": {
+    "message": "JavaScript-Werkzeug erlauben (mächtigstes, riskantestes)"
+  },
+  "savedGrants": {
+    "message": "Gespeicherte „Immer“-Freigaben"
+  },
+  "noGrants": {
+    "message": "Keine."
+  },
+  "revoke": {
+    "message": "Widerrufen"
+  },
+  "optAgent": {
+    "message": "Agent"
+  },
+  "groupTitle": {
+    "message": "Titel der Tab-Gruppe"
+  },
+  "groupColor": {
+    "message": "Farbe der Tab-Gruppe"
+  },
+  "gifQuality": {
+    "message": "GIF-Qualität (1 beste – 30 kleinste)"
+  },
+  "showThinking": {
+    "message": "Denkblöcke des Modells anzeigen"
+  },
+  "notifySound": {
+    "message": "Ton bei Benachrichtigungen abspielen"
+  },
+  "name": {
+    "message": "Name"
+  },
+  "schedule": {
+    "message": "Zeitplan"
+  },
+  "never": {
+    "message": "Nie (nur manuell)"
+  },
+  "daily": {
+    "message": "Täglich"
+  },
+  "weekly": {
+    "message": "Wöchentlich"
+  },
+  "monthly": {
+    "message": "Monatlich"
+  },
+  "timeOfDay": {
+    "message": "Uhrzeit"
+  },
+  "weekday": {
+    "message": "Wochentag"
+  },
+  "dayOfMonth": {
+    "message": "Tag des Monats"
+  },
+  "promptLabel": {
+    "message": "Prompt"
+  },
+  "promptHint": {
+    "message": "Mit {{name}} legen Sie Parameter fest, die beim Ausführen abgefragt werden."
+  },
+  "next": {
+    "message": "nächster Lauf"
+  },
+  "edit": {
+    "message": "Bearbeiten"
+  },
+  "delete": {
+    "message": "Löschen"
+  },
+  "save": {
+    "message": "Speichern"
+  },
+  "saved": {
+    "message": "Gespeichert"
+  },
+  "optLog": {
+    "message": "Aktivitätsprotokoll"
+  },
+  "logHelp": {
+    "message": "Jeder Werkzeugaufruf wird lokal protokolliert und 30 Tage aufbewahrt."
+  },
+  "filter": {
+    "message": "Filtern"
+  },
+  "exportJson": {
+    "message": "JSON exportieren"
+  },
+  "exportCsv": {
+    "message": "CSV exportieren"
+  },
+  "refresh": {
+    "message": "Aktualisieren"
+  },
+  "time": {
+    "message": "Zeit"
+  },
+  "action": {
+    "message": "Aktion"
+  },
+  "decision": {
+    "message": "Entscheidung"
+  },
+  "result": {
+    "message": "Ergebnis"
+  },
+  "optData": {
+    "message": "Daten"
+  },
+  "dataHelp": {
+    "message": "Token, Freigaben, Sitzungen, Screenshots und Protokoll liegen nur in diesem Browserprofil. Nichts wird übertragen außer an Ihre lokale Bridge."
+  },
+  "deleteAll": {
+    "message": "Alle Daten löschen"
+  },
+  "confirmDeleteAll": {
+    "message": "Kopplung, alle Freigaben, Einstellungen, Screenshots, Shortcuts und das Protokoll löschen?"
+  },
+  "deletedAll": {
+    "message": "Alle Daten wurden gelöscht."
+  }
+}

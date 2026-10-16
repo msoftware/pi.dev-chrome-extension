@@ -1,7 +1,7 @@
 /** read_page, get_page_text, form_input, javascript_tool and the internal __get_tree / __get_rects. */
 import { filterOutput, redactKnownValues, REDACTED } from "@pi-browser/shared";
 import { wrapPageContent } from "@pi-browser/shared/tab-context";
-import { attach, send, tabState } from "./cdp";
+import { attach, send, sendRacingDialog, tabState } from "./cdp";
 import { callAllFrames, callPage, frameOfRef } from "./page";
 import { image, text, ToolError, type Out, type ToolEnv } from "./env";
 import { preCheck } from "./security";
@@ -97,7 +97,7 @@ export async function runJavaScript(env: ToolEnv, tabId: number, code: string, t
     /* content script unavailable */
   }
   const run = async (expression: string, replMode: boolean) => {
-    const p = send<any>(tabId, "Runtime.evaluate", {
+    const p = sendRacingDialog<any>(tabId, "Runtime.evaluate", {
       expression,
       returnByValue: true,
       awaitPromise: true,
@@ -120,9 +120,11 @@ export async function runJavaScript(env: ToolEnv, tabId: number, code: string, t
     }
   };
   let res = await run(`{\n${code}\n}`, true);
+  if (res === undefined) return { content: [text(`The script opened a JavaScript ${tabState(tabId).dialog?.type ?? ""} dialog ("${(tabState(tabId).dialog?.message ?? "").slice(0, 100)}") and is waiting for it. Answer it with computer action key (Enter = accept, Escape = dismiss).`)] };
   const errText = (r: any) => String(r.exceptionDetails?.exception?.description ?? r.exceptionDetails?.text ?? "");
   if (res.exceptionDetails && /Illegal return statement/i.test(errText(res))) {
     res = await run(`(async () => {\n${code}\n})()`, false);
+    if (res === undefined) return { content: [text("The script opened a JavaScript dialog and is waiting for it. Answer it with computer action key (Enter = accept, Escape = dismiss).")] };
   }
   let out: string;
   if (res.exceptionDetails) {

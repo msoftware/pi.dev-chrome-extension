@@ -3,7 +3,7 @@
  * Runs in every frame at document_start in the isolated world; maps live only here (TREE-12).
  * Service-worker code calls these functions through chrome.scripting.executeScript.
  */
-import { isSensitiveField } from "@pi-browser/shared/sensitive";
+import { isSensitiveField } from "./sensitive";
 import { extractMainText, generateTree, newTreeState, type TreeEnv, type TreeOptions } from "./tree-core";
 
 interface Rect { x: number; y: number; w: number; h: number }

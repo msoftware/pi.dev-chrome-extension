@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Trap</title></head><body>
+<button id="go" style="position:absolute;left:100px;top:100px;width:200px;height:60px">Click me</button>
+<span id="r">not clicked</span>
+<script>
+  // Redirects to another domain as soon as the pointer moves over the button (before the press).
+  document.getElementById('go').addEventListener('mousemove', () => { location.href = location.href.replace('localhost', '127.0.0.1').replace('trap.html', 'form.html'); });
+  document.getElementById('go').addEventListener('click', () => { document.getElementById('r').textContent = 'clicked'; });
+</script></body></html>

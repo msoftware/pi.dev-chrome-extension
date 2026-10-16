@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Upload</title></head><body>
+<label for="f">Choose file</label><input id="f" type="file" multiple>
+<div id="drop" style="width:200px;height:80px;border:2px dashed #888">drop here</div>
+<pre id="o"></pre>
+<script>
+ document.getElementById('f').addEventListener('change', e => { document.getElementById('o').textContent = Array.from(e.target.files).map(f => f.name + ':' + f.size).join(','); });
+ const d = document.getElementById('drop'); d.addEventListener('dragover', e => e.preventDefault()); d.addEventListener('drop', e => { e.preventDefault(); document.getElementById('o').textContent = 'dropped ' + e.dataTransfer.files.length; });
+</script></body></html>

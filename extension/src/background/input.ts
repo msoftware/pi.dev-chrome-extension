@@ -1,6 +1,6 @@
 /** Input engine over CDP (requirements section 7). Real mouse and keyboard are never touched. */
 import { charToKeyEvent, parseKeySequence, parseModifierString, MOD, type Platform } from "@pi-browser/shared/keys";
-import { send, tabState } from "./cdp";
+import { send, sendRacingDialog, tabState } from "./cdp";
 import { sendIndicator, sleep } from "./indicators";
 
 export function platform(): Platform {
@@ -54,9 +54,9 @@ export async function click(tabId: number, x: number, y: number, o: ClickOptions
     await o.beforePress();
     const b = BUTTON[o.button];
     for (let i = 1; i <= o.count; i++) {
-      await send(tabId, "Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: b.name, buttons: b.mask, clickCount: i, modifiers: o.modifiers });
+      await sendRacingDialog(tabId, "Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: b.name, buttons: b.mask, clickCount: i, modifiers: o.modifiers });
       await sleep(12);
-      await send(tabId, "Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: b.name, buttons: 0, clickCount: i, modifiers: o.modifiers });
+      await sendRacingDialog(tabId, "Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: b.name, buttons: 0, clickCount: i, modifiers: o.modifiers });
       if (i < o.count) await sleep(100);
     }
   } finally {
@@ -130,11 +130,11 @@ export async function pressKeys(tabId: number, text: string, repeat = 1): Promis
       const printable = !!k.text && !hasCmd;
       const base = { key: k.key, code: k.code, windowsVirtualKeyCode: k.windowsVirtualKeyCode, modifiers: c.modifiers };
       if (printable) {
-        await send(tabId, "Input.dispatchKeyEvent", { type: "keyDown", ...base, text: k.text, unmodifiedText: k.text });
+        await sendRacingDialog(tabId, "Input.dispatchKeyEvent", { type: "keyDown", ...base, text: k.text, unmodifiedText: k.text });
       } else {
-        await send(tabId, "Input.dispatchKeyEvent", { type: "rawKeyDown", ...base, ...(c.commands.length ? { commands: c.commands } : {}) });
+        await sendRacingDialog(tabId, "Input.dispatchKeyEvent", { type: "rawKeyDown", ...base, ...(c.commands.length ? { commands: c.commands } : {}) });
       }
-      await send(tabId, "Input.dispatchKeyEvent", { type: "keyUp", ...base });
+      await sendRacingDialog(tabId, "Input.dispatchKeyEvent", { type: "keyUp", ...base });
     }
   }
 }

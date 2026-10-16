@@ -41,6 +41,8 @@ export interface TabState {
   navigating: boolean;
   postData: boolean;
   focusEmulation: boolean;
+  /** Last time a "leave page?" dialog was cancelled for this tab (navigation then never completes). */
+  leaveCancelledAt: number;
 }
 
 const states = new Map<number, TabState>();
@@ -55,11 +57,37 @@ export const NET_MAX = 500;
 export function tabState(tabId: number): TabState {
   let s = states.get(tabId);
   if (!s) {
-    s = { console: [], net: new Map(), netOrder: [], dialog: null, dialogNotes: [], acceptBeforeUnload: false, scale: null, navigating: false, postData: false, focusEmulation: false };
+    s = { console: [], net: new Map(), netOrder: [], dialog: null, dialogNotes: [], acceptBeforeUnload: false, scale: null, navigating: false, postData: false, focusEmulation: false, leaveCancelledAt: 0 };
     states.set(tabId, s);
   }
   return s;
 }
+
+/**
+ * Sends a CDP command that may open a modal dialog (alert/confirm/prompt). Chrome does not answer such commands until the
+ * dialog is closed, so the call is raced against the dialog opening; the late answer is ignored.
+ */
+export function sendRacingDialog<T = any>(tabId: number, method: string, params?: object): Promise<T | undefined> {
+  const st = tabState(tabId);
+  return new Promise<T | undefined>((resolve, reject) => {
+    let done = false;
+    const finish = (fn: () => void) => {
+      if (done) return;
+      done = true;
+      dialogWaiters.get(tabId)?.delete(wake);
+      fn();
+    };
+    const wake = () => finish(() => resolve(undefined));
+    if (!dialogWaiters.has(tabId)) dialogWaiters.set(tabId, new Set());
+    dialogWaiters.get(tabId)!.add(wake);
+    if (st.dialog) return wake();
+    send<T>(tabId, method, params).then(
+      (v) => finish(() => resolve(v)),
+      (e) => finish(() => reject(e)),
+    );
+  });
+}
+const dialogWaiters = new Map<number, Set<() => void>>();
 
 export function onDetached(fn: (tabId: number, reason: string) => void) {
   detachListeners.push(fn);
@@ -238,9 +266,11 @@ export function installListeners() {
           // AUX-04: answer automatically; default is "cancel" (stay on page).
           void send(tabId, "Page.handleJavaScriptDialog", { accept: st.acceptBeforeUnload }).catch(() => {});
           st.dialogNotes.push(`A "leave page?" dialog appeared and was ${st.acceptBeforeUnload ? "accepted" : "cancelled"}.`);
+          if (!st.acceptBeforeUnload) st.leaveCancelledAt = Date.now();
         } else {
           // AUX-05: block until the model has decided (answered via the dialog tool path / user approval).
           st.dialog = info;
+          for (const w of [...(dialogWaiters.get(tabId) ?? [])]) w();
           for (const l of dialogListeners) l(tabId, info);
         }
         break;
