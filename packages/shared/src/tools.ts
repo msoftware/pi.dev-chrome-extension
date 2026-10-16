@@ -68,6 +68,7 @@ export const TOOL_DEFS: ToolDef[] = [
       "Opening a different domain needs approval first.",
     parameters: Type.Object({
       url: Type.String({ description: "URL to open, or the word 'back' or 'forward'." }),
+      leaveDialog: Type.Optional(Type.Union([Type.Literal("accept"), Type.Literal("cancel")], { description: "How to answer a 'leave this page?' dialog during the navigation. Default: cancel." })),
       tabId,
     }),
     tabScoped: true,

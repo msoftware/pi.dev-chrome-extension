@@ -29,6 +29,10 @@ export interface BridgeHandlers {
   models(): Promise<ModelsResponse>;
   setConfig(body: ConfigBody): Promise<void>;
   toolProgress(p: ToolProgress): void;
+  /** Helper-model step of `find`, used when find runs inside browser_batch. */
+  find(body: { query: string; tree: string; url: string }): Promise<{ matches: unknown[]; usage?: unknown }>;
+  /** SEC-09: second opinion in automatic mode. */
+  review(body: { task: string; action: string; tool: string; domain: string; screenshot?: string }): Promise<{ allow: boolean; reason?: string }>;
   /** Called when a client (re)connects to the event stream. */
   onClientConnected(): void;
 }
@@ -234,6 +238,8 @@ export class BridgeServer {
       h.toolProgress((await readJson(req)) as ToolProgress);
       return json(res, 200, { ok: true });
     }
+    if (path === "/v1/find" && req.method === "POST") return json(res, 200, await h.find((await readJson(req)) as any));
+    if (path === "/v1/review" && req.method === "POST") return json(res, 200, await h.review((await readJson(req)) as any));
     if (path === "/v1/sessions" && req.method === "GET") return json(res, 200, { sessions: await h.listSessions() });
     if (path === "/v1/sessions" && req.method === "POST") return json(res, 201, await h.newSession());
     const sm = /^\/v1\/sessions\/([^/]+)\/messages$/.exec(path);
@@ -276,9 +282,6 @@ export class BridgeServer {
     req.on("close", () => {
       if (this.clients.get(deviceId) === client) this.clients.delete(deviceId);
     });
-    const info = this.opts.handlers.health();
-    const helloId = ++this.seq;
-    writeEvent(res, helloId, { type: "hello", sessionId: info.sessionId, model: info.model, bridgeVersion: BRIDGE_VERSION });
     if (Number.isFinite(last)) {
       this.trim(Date.now());
       for (const b of this.backlog) {
@@ -286,6 +289,9 @@ export class BridgeServer {
         if (b.id > last && !(b.event.type === "tool_request" && this.finished.has(b.event.request.requestId))) writeEvent(res, b.id, b.event);
       }
     }
+    // hello goes last so event ids stay in order for the client's Last-Event-ID bookkeeping.
+    const info = this.opts.handlers.health();
+    writeEvent(res, ++this.seq, { type: "hello", sessionId: info.sessionId, model: info.model, bridgeVersion: BRIDGE_VERSION });
     this.opts.handlers.onClientConnected();
   }
 }

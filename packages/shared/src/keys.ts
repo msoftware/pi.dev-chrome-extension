@@ -179,3 +179,16 @@ export function parseKeySequence(text: string, platform: Platform = "linux"): Pa
 export function isPrintable(ev: KeyEvent): boolean {
   return !!ev.text && ev.text !== "\r" ? true : ev.key === "Enter";
 }
+
+/** "ctrl+shift" -> modifier bitmask (used for click modifiers). */
+export function parseModifierString(text: string | undefined): number {
+  if (!text) return 0;
+  let m = 0;
+  for (const part of text.split(/[+\s,]+/)) {
+    const k = part.trim().toLowerCase();
+    if (!k) continue;
+    if (!(k in MOD_NAMES)) throw new Error(`Unknown modifier "${part}"`);
+    m |= MOD_NAMES[k];
+  }
+  return m;
+}

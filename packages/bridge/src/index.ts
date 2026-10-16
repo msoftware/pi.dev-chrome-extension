@@ -24,7 +24,7 @@ import {
   type ToolResult,
 } from "@pi-browser/shared";
 import { resolveConfig, type ResolvedConfig } from "./config";
-import { formatMatches, pickHelperModel, runFind } from "./find";
+import { formatMatches, pickHelperModel, runFind, runReview } from "./find";
 import { Logger } from "./logger";
 import { BridgeServer, HttpError } from "./server";
 import { TokenStore } from "./token-store";
@@ -267,6 +267,16 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
           sessionMessages,
           models,
           setConfig,
+          async find(body) {
+            const c = ctx();
+            const helper = pickHelperModel(c, cfg.helperModel);
+            const { matches, usage } = await runFind(c, helper, String(body.query ?? ""), String(body.tree ?? ""), String(body.url ?? ""), c.signal);
+            return { matches, usage };
+          },
+          async review(body) {
+            const c = ctx();
+            return runReview(c, pickHelperModel(c, cfg.helperModel), body, c.signal);
+          },
           toolProgress(p: ToolProgress) {
             progress.get(p.requestId)?.(p.message);
           },

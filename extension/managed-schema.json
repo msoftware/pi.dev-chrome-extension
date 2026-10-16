@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "bridgePort": { "title": "Bridge port", "description": "Port of the local pi-browser-bridge.", "type": "integer", "minimum": 1, "maximum": 65535 },
+    "blockedDomains": { "title": "Blocked domains", "description": "Registrable domains the agent may never use.", "type": "array", "items": { "type": "string" } },
+    "allowedDomains": { "title": "Allowed domains", "description": "Domains that need no confirmation for reading and navigating.", "type": "array", "items": { "type": "string" } },
+    "alwaysAskDomains": { "title": "Always ask domains", "description": "Domains that always require a one-time confirmation.", "type": "array", "items": { "type": "string" } },
+    "permissionMode": { "title": "Enforced permission mode", "type": "string", "enum": ["ask", "plan", "auto"] },
+    "javascriptToolEnabled": { "title": "JavaScript tool", "description": "Allow or forbid the javascript_tool.", "type": "boolean" }
+  }
+}

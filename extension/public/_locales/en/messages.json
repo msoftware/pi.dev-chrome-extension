@@ -1,0 +1,1 @@
+{ "extName": { "message": "Browser Agent" }, "extDescription": { "message": "Lets a local pi coding agent see and operate your browser." }, "actionTitle": { "message": "Open Browser Agent" }, "cmdToggle": { "message": "Show or hide the side panel" } }

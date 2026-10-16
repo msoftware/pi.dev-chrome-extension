@@ -87,6 +87,7 @@ beforeEach(async () => {
       listSessions: async () => [], newSession: async () => ({ id: "n" }), sessionMessages: async () => [],
       models: async () => ({ models: [], thinkingLevels: [], current: { model: null, thinkingLevel: "off" } }),
       setConfig: async () => {}, toolProgress: () => {}, onClientConnected: () => {},
+      find: async () => ({ matches: [] }), review: async () => ({ allow: true }),
     },
   });
   await server.start();
