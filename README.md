@@ -28,7 +28,16 @@ Eine Chrome-Erweiterung („der Arm“), die einen lokal laufenden [pi](https://
 | `packages/host/` | **pi-browser-host**: Headless-Host (pi per SDK, „Panel-geführt“, API-02) |
 | `packages/shared/` | Gemeinsames TypeScript-Paket: Werkzeugdefinitionen, Protokoll, Skalierung, Tastentabelle, Ausgabefilter, Berechtigungslogik (NFA-15) |
 | `tests/` | Unit-Tests (Vitest) und End-to-End-Tests (Playwright, auch gegen ein **echtes pi**) |
-| `docs/` | [Anforderungs-Abdeckung](docs/REQUIREMENTS-COVERAGE.md), [Offene Punkte & Entscheidungen](docs/DECISIONS.md) |
+| `scripts/` | Build-, Release- und Hilfsskripte (`build-npm-packages`, `pack-extension`, `release-check`, `set-version`) |
+| `docs/` | [Datenschutzerklärung](docs/PRIVACY.md), [Store-Texte](docs/store-listing.md), [Anforderungs-Abdeckung](docs/REQUIREMENTS-COVERAGE.md), [Offene Punkte & Entscheidungen](docs/DECISIONS.md) |
+
+## Installation für Endnutzer
+
+```bash
+pi install npm:pi-browser-bridge          # pi-Seite (Paket auf https://pi.dev/packages)
+```
+Chrome-Erweiterung: aus dem Chrome Web Store (Link folgt nach Veröffentlichung) oder den Zip `browser-agent-<version>-unpacked.zip` aus den [GitHub Releases](https://github.com/msoftware/pi.dev-chrome-extension/releases) entpacken und unter `chrome://extensions` → „Entpackte Erweiterung laden“. Danach in pi `/browser pair`.
+Wer die Veröffentlichung selbst durchführt, findet alles in [publish.md](publish.md).
 
 ## Schnellstart
 

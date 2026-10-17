@@ -18,17 +18,22 @@
     "test:all": "npm run typecheck && npm run build && vitest run && playwright test",
     "notices": "node scripts/third-party.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "test:acceptance": "PI_ACCEPTANCE=1 playwright test acceptance.real"
+    "test:acceptance": "PI_ACCEPTANCE=1 playwright test acceptance.real",
+    "build:npm": "node scripts/build-npm-packages.mjs",
+    "pack:extension": "node scripts/pack-extension.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "version:set": "node scripts/set-version.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "@types/jsdom": "^30.0.0",
     "@types/pngjs": "^6.0.5",
+    "esbuild": "^0.21.5",
     "fake-indexeddb": "^6.2.6",
+    "fflate": "^0.8.3",
     "jsdom": "^29.1.1",
     "pngjs": "^7.0.0",
     "typescript": "^5.6.0",
-    "vitest": "^2.1.0",
-    "esbuild": "^0.21.5"
+    "vitest": "^2.1.0"
   }
 }

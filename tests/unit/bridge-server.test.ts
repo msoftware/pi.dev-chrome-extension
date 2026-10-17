@@ -141,6 +141,18 @@ describe("bridge security (API-06..08)", () => {
   });
 });
 
+describe("several extension builds (API-08, Chrome Web Store ID)", () => {
+  it("accepts every configured extension id and nothing else", async () => {
+    await server.stop();
+    const other = "abcdefghijklmnopabcdefghijklmnop";
+    server = new BridgeServer({ port: 0, extensionIds: [EXTENSION_ID, other], tokens, log: new Logger(false), handlers: (server as any).opts.handlers });
+    await server.start();
+    expect((await req("GET", "/v1/health", { headers: { Origin: ORIGIN } })).status).toBe(200);
+    expect((await req("GET", "/v1/health", { headers: { Origin: `chrome-extension://${other}` } })).status).toBe(200);
+    expect((await req("GET", "/v1/health", { headers: { Origin: "chrome-extension://zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz" } })).status).toBe(403);
+  });
+});
+
 describe("events and tool round-trip (API-10/11)", () => {
   it("streams hello, requests, heartbeat; result resolves; duplicate ignored", async () => {
     const t = await pair();

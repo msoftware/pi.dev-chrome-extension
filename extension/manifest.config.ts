@@ -1,11 +1,12 @@
 import { defineManifest } from "@crxjs/vite-plugin";
 import { EXTENSION_KEY } from "../packages/shared/src/extension-id";
+import pkg from "./package.json";
 
 export default defineManifest({
   manifest_version: 3,
   name: "__MSG_extName__",
   description: "__MSG_extDescription__",
-  version: "0.1.0",
+  version: pkg.version,
   default_locale: "en",
   minimum_chrome_version: "116",
   key: EXTENSION_KEY,

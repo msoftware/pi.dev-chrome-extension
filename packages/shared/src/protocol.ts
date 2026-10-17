@@ -114,6 +114,8 @@ export interface BridgeFileConfig {
   disabledTools?: string[];
   /** Extra directories file_upload may read from. */
   uploadRoots?: string[];
+  /** Extra extension IDs the bridge accepts (e.g. a Chrome Web Store build). */
+  extensionIds?: string[];
   extensionId?: string;
   debug?: boolean;
 }

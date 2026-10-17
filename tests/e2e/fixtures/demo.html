@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Lakeside Table Booking</title>
+<style>
+  body{margin:0;font:16px/1.5 system-ui,sans-serif;background:#f4f1ec;color:#1d1b18}
+  header{background:#23463a;color:#fff;padding:18px 40px;font-size:20px;font-weight:600;letter-spacing:.02em}
+  main{max-width:640px;margin:36px auto;background:#fff;border-radius:14px;padding:30px 36px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  h1{margin:0 0 4px;font-size:26px} p.sub{margin:0 0 22px;color:#6b665e}
+  label{display:block;font-weight:600;margin:14px 0 4px} input,select{width:100%;padding:10px 12px;border:1px solid #cfc8bd;border-radius:8px;font:inherit;box-sizing:border-box}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  button{margin-top:22px;background:#c4622d;color:#fff;border:0;border-radius:10px;padding:12px 22px;font:600 16px system-ui;cursor:pointer}
+  #done{display:none;margin-top:18px;padding:12px 16px;background:#e5f3ea;border-radius:8px;color:#1b5e38}
+</style></head><body>
+<header>Lakeside Restaurant</header>
+<main>
+  <h1>Book a table</h1><p class="sub">Free cancellation up to 2 hours before your reservation.</p>
+  <label for="name">Name</label><input id="name" placeholder="Your name">
+  <div class="row">
+    <div><label for="date">Date</label><input id="date" type="date"></div>
+    <div><label for="time">Time</label><select id="time"><option>18:00</option><option>18:30</option><option>19:00</option><option>19:30</option><option>20:00</option></select></div>
+  </div>
+  <label for="guests">Guests</label><select id="guests"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+  <label for="email">E-mail for the confirmation</label><input id="email" type="email" placeholder="you@example.com">
+  <button id="book" onclick="document.getElementById('done').style.display='block'">Reserve table</button>
+  <div id="done">Thank you! Your table is reserved.</div>
+</main></body></html>

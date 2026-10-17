@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { DEFAULT_PORT, EXTENSION_ID, type BridgeFileConfig } from "@pi-browser/shared";
+import { DEFAULT_PORT, KNOWN_EXTENSION_IDS, type BridgeFileConfig } from "@pi-browser/shared";
 
 export function agentDir(): string {
   return process.env.PI_CODING_AGENT_DIR || path.join(os.homedir(), ".pi", "agent");
@@ -21,7 +21,7 @@ export function loadFileConfig(): BridgeFileConfig {
 
 export interface ResolvedConfig {
   port: number;
-  extensionId: string;
+  extensionIds: string[];
   helperModel?: string;
   disabledTools: string[];
   uploadRoots: string[];
@@ -35,7 +35,7 @@ export function resolveConfig(flagPort: string | boolean | undefined): ResolvedC
   const port = Number.isInteger(flag) && flag > 0 && flag < 65536 ? flag : f.port && f.port > 0 ? f.port : DEFAULT_PORT;
   return {
     port,
-    extensionId: f.extensionId || EXTENSION_ID,
+    extensionIds: [...new Set([...KNOWN_EXTENSION_IDS, ...(f.extensionId ? [f.extensionId] : []), ...(f.extensionIds ?? [])])],
     helperModel: f.helperModel,
     disabledTools: f.disabledTools ?? [],
     uploadRoots: f.uploadRoots ?? [],

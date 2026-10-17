@@ -253,7 +253,7 @@ export function createBridgeExtension(options: BridgeOptions = {}): ExtensionFac
       log.setEnabled(cfg.debug);
       const s = new BridgeServer({
         port: cfg.port,
-        extensionId: cfg.extensionId,
+        extensionIds: cfg.extensionIds,
         tokens,
         log,
         handlers: {

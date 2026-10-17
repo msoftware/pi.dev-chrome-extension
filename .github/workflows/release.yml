@@ -1,0 +1,94 @@
+# Release pipeline. Trigger: push a tag like v0.1.0 (see publish.md), or run it manually (dry run by default).
+name: Release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Really publish (npm, GitHub release, Chrome Web Store)? Leave off for a dry run."
+        type: boolean
+        default: false
+permissions:
+  contents: write      # create the GitHub release
+  id-token: write      # npm provenance
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, registry-url: "https://registry.npmjs.org" }
+      - run: npm ci
+      - name: Tag matches the version in package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          v=$(node -p "require('./package.json').version")
+          [ "refs/tags/v$v" = "$GITHUB_REF" ] || { echo "Tag $GITHUB_REF does not match package.json version $v"; exit 1; }
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: xvfb-run -a npx playwright test --grep-invert "acceptance"
+      - run: npm run build:npm
+      - run: npm run pack:extension
+      - name: Release check
+        run: npm run release:check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            release/extension/*.zip
+            release/npm
+  npm:
+    needs: verify
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: release, path: release-dl }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, registry-url: "https://registry.npmjs.org" }
+      # The host bundles the bridge, but publish the bridge first so a failure leaves nothing half-released.
+      - run: npm publish release-dl/npm/pi-browser-bridge --provenance --access public
+        env: { NODE_AUTH_TOKEN: "${{ secrets.NPM_TOKEN }}" }
+      - run: npm publish release-dl/npm/pi-browser-host --provenance --access public
+        env: { NODE_AUTH_TOKEN: "${{ secrets.NPM_TOKEN }}" }
+  github-release:
+    needs: verify
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: release, path: release-dl }
+      - name: Release notes from CHANGELOG.md
+        run: |
+          v=${GITHUB_REF_NAME#v}
+          awk -v v="$v" '$0 ~ "^## \\[?"v"\\]?" {f=1; next} /^## / && f {exit} f' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "See CHANGELOG.md" > notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: notes.md
+          files: release-dl/extension/*.zip
+  chrome-web-store:
+    needs: verify
+    if: (startsWith(github.ref, 'refs/tags/v') || inputs.publish)
+    runs-on: ubuntu-latest
+    env:
+      EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+      CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+      REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: release, path: release-dl }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Upload to the Chrome Web Store (skipped until the secrets exist; the first upload is done by hand, see publish.md)
+        run: |
+          if [ -z "$EXTENSION_ID" ] || [ -z "$REFRESH_TOKEN" ]; then echo "CWS secrets not set - skipping"; exit 0; fi
+          zip=$(ls release-dl/extension/*-store.zip)
+          # uploads the new version and submits it for review (without --auto-publish it stays a draft)
+          npx --yes chrome-webstore-upload-cli@3 upload --source "$zip" --auto-publish

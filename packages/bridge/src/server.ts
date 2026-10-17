@@ -39,7 +39,9 @@ export interface BridgeHandlers {
 
 export interface ServerOptions {
   port: number;
-  extensionId: string;
+  /** Origins `chrome-extension://<id>` that may talk to the bridge (API-08). */
+  extensionIds?: string[];
+  extensionId?: string;
   tokens: TokenStore;
   handlers: BridgeHandlers;
   log: Logger;
@@ -259,7 +261,8 @@ export class BridgeServer {
     if (!ok) throw new HttpError(403, "Bad Host header");
     const origin = req.headers.origin;
     if (origin !== undefined) {
-      if (origin !== `chrome-extension://${this.opts.extensionId}`) throw new HttpError(403, "Origin not allowed");
+      const ids = this.opts.extensionIds ?? (this.opts.extensionId ? [this.opts.extensionId] : []);
+      if (!ids.some((id) => origin === `chrome-extension://${id}`)) throw new HttpError(403, "Origin not allowed");
     } else if (path === "/v1/pair") {
       throw new HttpError(403, "Origin required");
     }
