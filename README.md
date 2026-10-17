@@ -119,3 +119,125 @@ Die vollständige Zuordnung Anforderung → Umsetzung → Test steht in [docs/RE
 * Das Tastenkürzel `Ctrl+E` belegt Chrome standardmäßig für die Adressleistensuche; Erweiterungs-Kürzel haben Vorrang, sind aber unter `chrome://extensions/shortcuts` änderbar (siehe DECISIONS).
 * `debugger` ist eine Berechtigung, die der Chrome Web Store streng prüft; empfohlen ist Verteilung als nicht gelistete Erweiterung oder per Unternehmensrichtlinie.
 * Manuell zu prüfen (nicht automatisierbar in Headless-Chrome): Tastenkürzel-Umschalter (AK-02), minimiertes Fenster (AUX-07), Edge/Brave (NFA-11), Wikipedia-Szenario mit echtem Modell (AK-03).
+
+---
+
+## Installation ohne Chrome Web Store (Schritt für Schritt)
+
+Dieser Abschnitt erklärt, wie du **die Chrome-Erweiterung ohne den Store** installierst und die beiden npm-Pakete [`pi-browser-bridge`](https://www.npmjs.com/package/pi-browser-bridge) und [`pi-browser-host`](https://www.npmjs.com/package/pi-browser-host) in [pi](https://pi.dev) benutzt. Die Befehle laufen in PowerShell (Windows), Terminal (macOS) und Bash (Linux) gleich, Abweichungen sind vermerkt.
+
+Du brauchst zwei Teile, die zusammenarbeiten:
+
+| Teil | Wo es läuft | Was es tut |
+|---|---|---|
+| **Chrome-Erweiterung** „Browser Agent“ | in Chrome | der „Arm“: sieht und bedient den Browser, zeigt Chat und Freigaben |
+| **`pi-browser-bridge`** (oder **`pi-browser-host`**) | in/neben pi, auf deinem Rechner | das „Gehirn“-Ende: stellt pi die 20 Browser-Werkzeuge bereit |
+
+Voraussetzungen: **Google Chrome ab Version 116** (oder Chromium/Edge/Brave, die Erweiterungen aus Ordnern laden), **Node.js ab Version 20** und **pi** mit eingerichtetem Modellanbieter.
+
+### 1. Chrome-Erweiterung ohne Store installieren
+
+1. Lade das Zip **`browser-agent-<version>-unpacked.zip`** von der Seite [Releases](https://github.com/msoftware/pi.dev-chrome-extension/releases) herunter. (Nicht das `-store.zip`; das ist für den Chrome Web Store.)
+2. **Entpacke** das Zip in einen Ordner, der **dauerhaft bleibt**, z. B. `C:\Tools\browser-agent` oder `~/browser-agent`. Chrome liest die Dateien aus diesem Ordner bei jedem Start; wird er gelöscht oder verschoben, verschwindet die Erweiterung. Im Ordner muss direkt die Datei `manifest.json` liegen (nicht noch ein Unterordner).
+3. Öffne in Chrome die Adresse **`chrome://extensions`**.
+4. Schalte oben rechts den **Entwicklermodus** ein.
+5. Klicke auf **„Entpackte Erweiterung laden“** und wähle den entpackten Ordner.
+6. Die Erweiterung „Browser Agent“ erscheint in der Liste. Ihre **ID ist `omfoefeoobddgdfoichknkcidfoippih`** – sie bleibt bei jeder Installation aus diesem Zip gleich, daher akzeptiert die Bridge sie ohne weitere Einstellung.
+7. Hefte sie an die Symbolleiste: Puzzle-Symbol → Stecknadel neben „Browser Agent“.
+
+Chrome zeigt bei Erweiterungen im Entwicklermodus eventuell die Meldung „Erweiterungen im Entwicklermodus deaktivieren“ beim Start; sie lässt sich wegklicken, die Erweiterung bleibt aktiv.
+
+**Aktualisieren:** neues Zip herunterladen, **in denselben Ordner** entpacken (Dateien ersetzen), dann auf `chrome://extensions` beim „Browser Agent“ das Symbol **⟳ (Neu laden)** klicken.
+
+**Alternative: aus dem Quellcode bauen** (wenn du kein Release-Zip hast):
+
+```bash
+git clone https://github.com/msoftware/pi.dev-chrome-extension
+cd pi.dev-chrome-extension
+npm install
+npm run build          # erzeugt extension/dist
+```
+Dann bei Schritt 5 den Ordner `extension/dist` auswählen.
+
+### 2. `pi-browser-bridge` installieren und in pi nutzen (empfohlen)
+
+Die Bridge ist ein **pi-Paket**. Installation (einmalig):
+
+```bash
+pi install npm:pi-browser-bridge
+pi list                      # zeigt die installierten Pakete; pi-browser-bridge muss erscheinen
+```
+
+*Nur ausprobieren, ohne zu installieren:* `pi -e npm:pi-browser-bridge`.
+
+**Benutzen:**
+
+1. Starte pi wie gewohnt: `pi`. Beim Start lädt pi die Bridge; unten erscheint der Status `browser :47823 (not paired)`.
+2. Tippe in pi **`/browser pair`**. pi zeigt einen **6-stelligen Code** (5 Minuten gültig).
+3. Öffne in Chrome die Seite, auf der der Agent arbeiten soll, und klicke auf das **Browser-Agent-Symbol**. Das Seitenpanel öffnet sich, der Tab kommt in die orange Gruppe „Agent“.
+4. Gib den Code im Panel ein → Status **„Verbunden“**. Die Kopplung bleibt bestehen; sie ist nur beim ersten Mal nötig.
+5. Gib einen Auftrag **im Panel oder im pi-Terminal** ein, z. B. „Suche auf Wikipedia nach Chrome DevTools Protocol“. Beide sehen denselben Verlauf.
+6. Beim ersten Zugriff auf eine neue Webseite fragt die Erweiterung um Erlaubnis. Mit dem **Stopp-Button** unten auf der Seite (oder durch Schließen des Panels) brichst du jederzeit ab.
+
+Nützliche pi-Befehle:
+
+| Befehl | Wirkung |
+|---|---|
+| `/browser` | Status: Port, Verbindung, gekoppelte Browser |
+| `/browser pair` | neuer Kopplungscode |
+| `/browser revoke` | Kopplung widerrufen |
+| `/browser tools off` / `on` | Browser-Werkzeuge aus- bzw. einschalten |
+
+Einstellungen (optional): Port ändern mit `pi --browser-port 47824` (dann in den Einstellungen der Erweiterung denselben Port eintragen) oder dauerhaft in `~/.pi/agent/browser-bridge.json` (unter Windows `%USERPROFILE%\.pi\agent\browser-bridge.json`):
+
+```json
+{ "port": 47823, "helperModel": "anbieter/modell-id", "disabledTools": ["javascript_tool"] }
+```
+
+**Aktualisieren:** `pi update --extensions` (oder `pi install npm:pi-browser-bridge` erneut).
+
+### 3. `pi-browser-host` installieren und nutzen (ohne pi-Terminal)
+
+Der Host startet pi **unsichtbar im Hintergrund**; das Chrome-Seitenpanel ist dann die einzige Oberfläche. Praktisch, wenn du nie im Terminal arbeiten willst. Die Bridge ist im Host bereits enthalten – du brauchst `pi-browser-bridge` dafür **nicht** zusätzlich.
+
+```bash
+npm install -g pi-browser-host @earendil-works/pi-coding-agent
+```
+(`@earendil-works/pi-coding-agent` ist pi selbst; ist es schon global installiert, genügt `npm install -g pi-browser-host`.)
+
+Starten:
+
+```bash
+pi-browser-host --cwd ~/mein-projekt
+```
+Der Host druckt beim Start einen **Kopplungscode** (`Pairing code: 123456`) und läuft, bis du ihn mit **Strg+C** beendest. Dann wie oben: Browser-Agent-Symbol klicken, Code im Panel eingeben, Auftrag erteilen. Eine neue Unterhaltung startest du im Panel mit **＋**.
+
+Optionen:
+
+| Option | Bedeutung |
+|---|---|
+| `--cwd <ordner>` | Arbeitsverzeichnis für pi (Standard: aktueller Ordner) |
+| `--browser-port <port>` | Port (Standard 47823) |
+| `--provider <anbieter> --model <modell>` | Modell festlegen (sonst pi-Standard aus `~/.pi/agent`) |
+| `-e <datei.ts>` | zusätzliche pi-Extensions laden (mehrfach möglich) |
+| `--no-session` | Unterhaltung nicht auf der Festplatte speichern |
+
+Anbieter, API-Schlüssel und Einstellungen kommen aus deiner normalen pi-Konfiguration; melde dich vorher einmal mit `pi` an bzw. richte den Anbieter dort ein.
+
+Ohne globale Installation: `npx pi-browser-host --cwd .` (benötigt, dass `@earendil-works/pi-coding-agent` im Projekt oder global installiert ist).
+
+> Nutze **entweder** die Bridge in deinem normalen pi **oder** den Host. Beide gleichzeitig würden denselben Port belegen; für zwei Instanzen gib dem zweiten `--browser-port 47824` und trage den Port in der Erweiterung ein.
+
+### 4. Typische Probleme
+
+| Symptom | Ursache und Lösung |
+|---|---|
+| Panel zeigt **„Getrennt“** | pi bzw. der Host läuft nicht, oder der Port stimmt nicht. In pi `/browser` prüfen; Port in den Einstellungen der Erweiterung (⚙ im Panel) vergleichen. |
+| **„Kopplung nötig“** bleibt stehen | Code abgelaufen oder falsch (5 Minuten, 5 Versuche). In pi `/browser pair` erneut ausführen. |
+| Panel zeigt „Getrennt“, obwohl pi läuft, und die Erweiterung stammt **nicht** aus dem Zip (z. B. andere ID) | Die Bridge kennt die ID nicht. Ihre ID von `chrome://extensions` kopieren und in `~/.pi/agent/browser-bridge.json` eintragen: `{ "extensionIds": ["<die-ID>"] }`. |
+| `pi: command not found` / `gh`, `npm` unbekannt | Programm nicht installiert oder Terminal nach der Installation nicht neu gestartet. Node: <https://nodejs.org>; pi: <https://pi.dev>. |
+| Windows: `npm install -g` meldet „Execution Policy“ | PowerShell einmalig mit `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` freigeben oder `cmd` benutzen. |
+| Erweiterung ist nach Chrome-Neustart weg | Der entpackte Ordner wurde gelöscht/verschoben. Zip erneut entpacken und die Erweiterung neu laden (Schritt 1). |
+| Es soll nichts den Rechner verlassen | Ein **lokales Modell** in pi einrichten (z. B. llama.cpp/Ollama); die Erweiterung selbst sendet nie Daten an Dritte (siehe [Datenschutzerklärung](docs/PRIVACY.md)). |
+
+Mehr zum Testen: [test.md](test.md) · zum Veröffentlichen: [publish.md](publish.md).
