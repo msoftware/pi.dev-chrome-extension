@@ -45,7 +45,9 @@ test("AUX-06: a background tab can be screenshotted and operated; it stays in th
 test("UI-09: the group title shows progress while the agent works and a tick when settled", async () => {
   const title = () => env.sw.evaluate(async (id) => (await chrome.tabGroups.get((await chrome.tabs.get(id)).groupId)).title, tabId);
   env.pi.emit({ type: "run_state", state: "started" });
-  await expectEventually(async () => /●/.test((await title()) ?? ""), 5000, "dots");
+  await expectEventually(async () => /●/.test((await title()) ?? ""), 5000, "dot on");
+  await expectEventually(async () => /○/.test((await title()) ?? ""), 5000, "dot off (it blinks)");
+  expect(((await title()) ?? "").match(/[●○]/g)).toHaveLength(1); // always exactly one dot
   env.pi.emit({ type: "run_state", state: "settled" });
   await expectEventually(async () => /✓/.test((await title()) ?? ""), 5000, "tick");
 });

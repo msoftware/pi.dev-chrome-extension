@@ -147,10 +147,11 @@ export async function removeSession(groupId: number) {
   await persist();
 }
 
-const frames = ["●", "●●", "●●●"];
+// One dot that blinks (filled <-> hollow). Both glyphs have the same width, so the tab group never changes size.
+const frames = ["●", "○"];
 const animations = new Map<number, ReturnType<typeof setInterval>>();
 
-/** UI-09: animated dots in the group title while working, a tick after run_state settled. */
+/** UI-09: a blinking dot in the group title while working, a tick after run_state settled. */
 export async function setGroupStatus(groupId: number, state: "working" | "done" | "idle"): Promise<void> {
   const s = await getSettings();
   const stop = () => {
@@ -164,7 +165,7 @@ export async function setGroupStatus(groupId: number, state: "working" | "done" 
       let i = 0;
       const tick = () => void chrome.tabGroups.update(groupId, { title: `${s.groupTitle} ${frames[i++ % frames.length]}` }).catch(stop);
       tick();
-      animations.set(groupId, setInterval(tick, 500));
+      animations.set(groupId, setInterval(tick, 600));
     } else {
       stop();
       await chrome.tabGroups.update(groupId, { title: state === "done" ? `${s.groupTitle} ✓` : s.groupTitle });
