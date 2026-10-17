@@ -184,6 +184,46 @@ Der Flaschenhals bleibt das Modell, nicht der Browser.
 | Dateien | `file_upload`, `upload_image`, `gif_creator` |
 | Wiederverwendung | `shortcuts_list`, `shortcuts_execute` |
 
+### Alle Werkzeuge im Detail
+
+**Sehen und Lesen**
+
+* **`computer`** – das Universalwerkzeug, das den Browser bedient wie ein Mensch. Aktionen: `screenshot`, `zoom` (Bereich `[x0,y0,x1,y1]` in höherer Auflösung), `scroll`, `scroll_to` (Element per Referenz in den Sichtbereich), `left_click`, `right_click`, `double_click`, `triple_click`, `hover`, `left_click_drag`, `type`, `key` (z. B. `ctrl+a`, `Enter`, optional mit `repeat`) und `wait`. Elemente adressiert pi bevorzugt per `ref`, sonst per Koordinate aus dem letzten Screenshot. Klicks mit gehaltenen Modifier-Tasten (`ctrl`, `shift`) sind möglich.
+* **`read_page`** – liefert den Barrierefreiheits-Baum der Seite als Text, jedes Element mit einer Referenz wie `ref_12`. Das ist meist günstiger und genauer als ein Screenshot. Mit `depth`, `ref_id` (Teilbaum) und `max_chars` begrenzt pi die Ausgabe.
+* **`find`** – sucht Elemente in natürlicher Sprache („Login-Button“, „Suchfeld im Header“) und gibt passende Referenzen zurück. Praktisch auf großen Seiten, auf denen der komplette Baum zu lang wäre.
+* **`get_page_text`** – der reine Text der Seite, ohne Layout. Gut für Artikel, Dokumentation oder Logs im Browser.
+
+**Handeln**
+
+* **`form_input`** – setzt den Wert eines Formularelements direkt per Referenz (Text, Zahl, Checkbox, Auswahlliste). Zuverlässiger als Klicken und Tippen und löst die passenden `input`-/`change`-Ereignisse aus.
+* **`navigate`** – öffnet eine URL oder geht mit `back`/`forward` im Verlauf. Mit `leaveDialog` legst du fest, wie ein „Seite wirklich verlassen?“-Dialog beantwortet wird (Standard: abbrechen).
+* **`javascript_tool`** – führt JavaScript im Kontext der Seite aus und gibt das Ergebnis zurück. Das mächtigste und riskanteste Werkzeug: Jede Ausführung braucht eine eigene Freigabe, die Ausgabe wird gefiltert, und du kannst es komplett abschalten.
+* **`browser_batch`** – führt mehrere der obigen Aktionen (`computer`, `form_input`, `read_page`, `get_page_text`, `find`, `navigate`, `javascript_tool`) in einem Aufruf aus. Spart Modell-Roundtrips; bei einem Fehler bricht der Stapel ab und meldet, welcher Schritt scheiterte.
+* **`update_plan`** – pi legt Domains und 3 bis 7 Schritte vor, bevor es loslegt. Im Modus *Plan* gibst du damit die Domains einmal frei, statt jede Aktion einzeln zu bestätigen.
+
+**Tabs und Fenster**
+
+* **`tabs_context`** – listet die Tabs der Sitzungs-Gruppe mit ID, Titel und URL. pi ruft es auf, bevor es eine unbekannte Tab-ID benutzt.
+* **`tabs_create`** – öffnet einen neuen Tab in der Gruppe, optional gleich mit URL.
+* **`tabs_close`** – schließt einen Tab der Gruppe. Der Haupt-Tab bleibt geschützt.
+* **`resize_window`** – ändert die Fenstergröße in Pixeln, etwa um Breakpoints und mobile Layouts zu testen.
+
+**Debuggen**
+
+* **`read_console_messages`** – Konsolenausgaben und unbehandelte Fehler eines Tabs, nur für die aktuelle Domain. Filterbar per `pattern` (regulärer Ausdruck), `limit`, nur Fehler, und mit `clear` leerbar.
+* **`read_network_requests`** – aufgezeichnete Netzwerkanfragen mit Methode, URL, Status, Typ, Dauer und Größe, filterbar per `urlPattern`. `Authorization`- und Cookie-Header werden nie mitgeliefert.
+
+**Dateien und Medien**
+
+* **`file_upload`** – hängt lokale Dateien (absolute Pfade) an ein Datei-Feld, ohne den nativen Dateidialog zu öffnen. Die Pfade durchlaufen eine Sicherheitsprüfung.
+* **`upload_image`** – legt einen zuvor aufgenommenen Screenshot (per `imageId`) oder ein vom Nutzer angehängtes Bild in ein Datei-Feld oder lässt es an einer Koordinate fallen.
+* **`gif_creator`** – nimmt die Aktionen einer Aufgabe als animiertes GIF auf: `start_recording`, handeln, `stop_recording`, dann `export` (Download oder auf eine Seite ziehen) oder `clear`. Ideal für Bugreports und Dokumentation.
+
+**Wiederverwendung**
+
+* **`shortcuts_list`** – listet deine gespeicherten Prompt-Shortcuts.
+* **`shortcuts_execute`** – startet einen Shortcut per ID, etwa „Smoke-Test der Staging-Seite“, den du einmal formuliert hast.
+
 Praktische Details:
 
 * **Tab-Gruppe als Arbeitsbereich.** Alle Werkzeuge akzeptieren nur `tabId`s aus der Gruppe der Sitzung. Deine anderen Tabs bleiben unberührt. Öffnet ein Klick einen neuen Tab, meldet das Ergebnis dessen ID und der Tab wird Teil der Gruppe.
