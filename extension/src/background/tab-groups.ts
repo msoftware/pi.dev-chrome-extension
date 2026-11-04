@@ -174,3 +174,34 @@ export async function setGroupStatus(groupId: number, state: "working" | "done" 
     stop();
   }
 }
+
+// ---- Which tabs the agent is acting in (UI-07 / SEC-07) ----------------------------------------------------------------
+// A new tab joins the agent's group only if its opener is a tab the agent is acting in right now (or just was): a link
+// with target=_blank, window.open from javascript_tool, a form submit. Tabs the user opens themselves stay outside.
+
+/** How long after a tool call a tab it opens still counts as opened by the agent (pages may open popups a bit later). */
+export const AGENT_OPENED_TAB_GRACE_MS = 3000;
+const actingCount = new Map<number, number>();
+const actedAt = new Map<number, number>();
+
+export function beginAgentAction(tabId: number) {
+  actingCount.set(tabId, (actingCount.get(tabId) ?? 0) + 1);
+}
+
+export function endAgentAction(tabId: number) {
+  const n = (actingCount.get(tabId) ?? 1) - 1;
+  if (n > 0) actingCount.set(tabId, n);
+  else actingCount.delete(tabId);
+  actedAt.set(tabId, Date.now());
+}
+
+export function agentActingIn(tabId: number, now = Date.now()): boolean {
+  if ((actingCount.get(tabId) ?? 0) > 0) return true;
+  const at = actedAt.get(tabId);
+  return at !== undefined && now - at <= AGENT_OPENED_TAB_GRACE_MS;
+}
+
+export function forgetAgentActions(tabId: number) {
+  actingCount.delete(tabId);
+  actedAt.delete(tabId);
+}

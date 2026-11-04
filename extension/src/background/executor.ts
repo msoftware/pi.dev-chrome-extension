@@ -19,7 +19,7 @@ import { readConsole, readNetwork, uploadImage, fileUpload, resizeWindow } from 
 import { formInput, getPageText, getRects, readPage, runJavaScript } from "./page-tools";
 import type { PermissionManager } from "./permissions";
 import { preCheck, SafetyError } from "./security";
-import { addTabToGroup, assertInGroup, groupOfTab, sessionForGroup, tabContext, takeChangeNote, type GroupSession } from "./tab-groups";
+import { addTabToGroup, assertInGroup, beginAgentAction, endAgentAction, groupOfTab, sessionForGroup, tabContext, takeChangeNote, type GroupSession } from "./tab-groups";
 import type { GifRecorder } from "./gif";
 import { sendIndicator } from "./indicators";
 import { getShot } from "../common/idb";
@@ -232,6 +232,16 @@ export class ToolExecutor {
     void this.deps.ensureIndicators(tabId); // never wait for the page here: it may be blocked by a dialog
     if (tab.url) tabState(tabId); // make sure state exists
 
+    // Tabs opened while (or right after) the agent acts here join the group; see onCreated in the service worker.
+    beginAgentAction(tabId);
+    try {
+      return await this.dispatchTab(env, name, a, tabId, tab);
+    } finally {
+      endAgentAction(tabId);
+    }
+  }
+
+  private async dispatchTab(env: ToolEnv, name: string, a: Record<string, any>, tabId: number, tab: chrome.tabs.Tab): Promise<Out> {
     switch (name) {
       case "navigate":
         return this.navigate(env, tab, a);

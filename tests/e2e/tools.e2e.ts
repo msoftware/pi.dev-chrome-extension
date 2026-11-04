@@ -220,6 +220,19 @@ test("a click that opens a new tab reports its id and groups it (TOOL-02)", asyn
   await env.pi.tool("tabs_close", { tabId: id });
 });
 
+test("UI-07: a tab opened by the agent through window.open joins the group", async () => {
+  await freshPage(`${env.site.a}/index.html`);
+  const before = env.ctx.pages().length;
+  // window.open from javascript_tool: opened by the agent, joins the group
+  const r = await env.pi.tool("javascript_tool", { tabId, action: "javascript_exec", text: `window.open("/form.html"); "ok"` });
+  expect(r.ok, txt(r)).toBe(true);
+  await expectEventually(() => env.ctx.pages().length > before, 10_000, "popup tab");
+  const popup = env.ctx.pages()[env.ctx.pages().length - 1];
+  const popupId = await tabIdOf(env, popup);
+  await expectEventually(async () => txt(await env.pi.tool("tabs_context")).includes(`tabId ${popupId}`), 10_000, "popup grouped");
+  await env.pi.tool("tabs_close", { tabId: popupId });
+});
+
 test("restricted pages allow only navigate (TOOL-09)", async () => {
   const tab = await env.sw.evaluate(async (id) => {
     const t = await chrome.tabs.get(id);

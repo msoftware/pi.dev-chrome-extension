@@ -599,19 +599,20 @@ chrome.notifications.onClicked.addListener(async (id) => {
 
 // ---- tab / group bookkeeping -----------------------------------------------------------------------------------------------------------
 
-chrome.tabs.onCreated.addListener(async (tab) => {
-  if (tab.id === undefined) return;
-  noteNewTab({ tabId: tab.id, openerTabId: tab.openerTabId, at: Date.now() });
-  if (tab.openerTabId !== undefined) {
-    const g = await groups.groupOfTab(tab.openerTabId);
-    if (g) {
-      try {
-        await groups.addTabToGroup(tab.id, g.groupId);
-        groups.markDirty(g.groupId);
-      } catch {
-        /* tab already gone */
-      }
-    }
+// UI-07 / SEC-07: only tabs the agent opened join its group. tabs.onCreated is not enough: Chrome also sets an
+// openerTabId for tabs the user opens (e.g. Ctrl+T while an agent tab is active), and the agent could then operate
+// them. onCreatedNavigationTarget fires only when a page opens the tab (target=_blank link, window.open, form submit),
+// and the tab joins only if the agent is acting in that page right now.
+chrome.webNavigation.onCreatedNavigationTarget.addListener(async (d) => {
+  if (!groups.agentActingIn(d.sourceTabId)) return;
+  noteNewTab({ tabId: d.tabId, openerTabId: d.sourceTabId, at: Date.now() });
+  const g = await groups.groupOfTab(d.sourceTabId);
+  if (!g) return;
+  try {
+    await groups.addTabToGroup(d.tabId, g.groupId);
+    groups.markDirty(g.groupId);
+  } catch {
+    /* tab already gone */
   }
 });
 
@@ -630,6 +631,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
 chrome.tabs.onRemoved.addListener(async (tabId) => {
   forgetTab(tabId);
   forgetCursor(tabId);
+  groups.forgetAgentActions(tabId);
   const g = await groups.sessionForMainTab(tabId);
   if (g) {
     if (running && g.groupId === activeGroupId) void stopAgent();
