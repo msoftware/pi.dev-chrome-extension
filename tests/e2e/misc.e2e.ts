@@ -168,3 +168,39 @@ test("NFA-12: the interface follows the browser language (German)", async () => 
     fs.rmSync(userDir, { recursive: true, force: true });
   }
 });
+
+test("IND: the phantom cursor flies to where each action happens (click, form_input, type)", async () => {
+  const { PNG } = await import("pngjs");
+  await page.goto(`${env.site.a}/form.html`);
+  await page.bringToFront();
+  const tree = txt(await env.pi.tool("read_page", { tabId, filter: "interactive" }));
+  const first = /textbox "Your first name" \[(ref_\d+)\]/.exec(tree)![1];
+  const country = /combobox "Country" \[(ref_\d+)\]/.exec(tree)![1];
+  // The cursor is drawn with its tip on the target and its orange body below/right of it.
+  const cursorAt = async (selector: string) => {
+    await page.waitForTimeout(650); // click ripples have faded, only the cursor is left
+    const b = (await page.locator(selector).boundingBox())!;
+    const cx = Math.round(b.x + b.width / 2);
+    const cy = Math.round(b.y + b.height / 2);
+    const png = PNG.sync.read(await page.screenshot());
+    for (let y = cy - 2; y <= cy + 18; y++) {
+      for (let x = cx - 2; x <= cx + 14; x++) {
+        const i = (png.width * y + x) * 4;
+        const [r, g, bl] = [png.data[i], png.data[i + 1], png.data[i + 2]];
+        if (Math.abs(r - 224) < 24 && Math.abs(g - 112) < 24 && Math.abs(bl - 44) < 24) return true;
+      }
+    }
+    return false;
+  };
+  const click = await env.pi.tool("computer", { tabId, action: "left_click", ref: first });
+  expect(click.ok, txt(click)).toBe(true);
+  expect(await cursorAt("#r-first")).toBe(true);
+  const fill = await env.pi.tool("form_input", { tabId, ref: country, value: "Austria" });
+  expect(fill.ok, txt(fill)).toBe(true);
+  expect(await cursorAt("#r-country")).toBe(true);
+  expect(await cursorAt("#r-first")).toBe(false);
+  await page.focus("#r-email");
+  const typed = await env.pi.tool("computer", { tabId, action: "type", text: "ada@example.com" });
+  expect(typed.ok, txt(typed)).toBe(true);
+  expect(await cursorAt("#r-email")).toBe(true);
+});

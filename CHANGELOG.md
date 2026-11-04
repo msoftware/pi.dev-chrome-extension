@@ -2,6 +2,11 @@
 
 All notable changes to this project. Format: [Keep a Changelog](https://keepachangelog.com), versions: [SemVer](https://semver.org).
 
+## [Unreleased]
+
+### Added
+- **Animated phantom cursor**: the on-page cursor now flies along a gently curved path to wherever the agent acts next instead of jumping. It covers clicks, hover, drag, scroll, `scroll_to`, `type` and `key` (to the focused element), `form_input`, `file_upload` and `upload_image`. Clicks show a ripple (dashed for right-click, repeated for double/triple), drags show a held-button state, typing shows a small badge. The real input is dispatched only once the cursor has arrived; the cursor continues from its last position after a page load; background tabs and `prefers-reduced-motion` skip the animation.
+
 ## [0.1.0] - 2026-10-17
 
 First public release.

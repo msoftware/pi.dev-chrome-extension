@@ -4,7 +4,7 @@ import { capture } from "./screenshot";
 import * as input from "./input";
 import { callPage, frameOfRef } from "./page";
 import { image, text, ToolError, throwIfAborted, type Out, type ToolEnv } from "./env";
-import { sleep } from "./indicators";
+import { cursorEffect, moveCursorToRect, sleep, type ViewRect } from "./indicators";
 import { addTabToGroup } from "./tab-groups";
 
 export interface NewTabNote {
@@ -71,6 +71,13 @@ async function afterAction(env: ToolEnv, tabId: number, since: number, notes: st
     }
     notes.push(`This opened a new tab: tabId ${t.tabId}. Use that tab ID for further actions on it.`);
   }
+}
+
+/** Typing and key presses act on the focused element: point the phantom cursor at it. */
+async function pointAtFocus(tabId: number, rect: ViewRect | undefined) {
+  if (!rect || rect.w <= 0 || rect.h <= 0) return;
+  await moveCursorToRect(tabId, rect);
+  await cursorEffect(tabId, { kind: "type" });
 }
 
 async function isMinimized(tabId: number): Promise<boolean> {
@@ -150,6 +157,7 @@ export async function computer(env: ToolEnv, tabId: number, a: Args): Promise<Ou
       await env.authorize({ tool: "computer", args: { action: act }, tabUrl: url, preview: `Scroll ${a.ref} into view` });
       const r = await callPage<any>(tabId, "rectOf", [a.ref, true], frameOfRef(a.ref));
       if (r.error) throw new ToolError(r.error);
+      await moveCursorToRect(tabId, r.rect);
       return { content: [text(`Scrolled ${a.ref} into view.`)] };
     }
     case "left_click":
@@ -205,6 +213,7 @@ export async function computer(env: ToolEnv, tabId: number, a: Args): Promise<Ou
       const f = await callPage<any>(tabId, "focusedInfo").catch(() => ({ sensitive: false }));
       await env.authorize({ tool: "computer", args: { action: act }, tabUrl: url, sensitive: !!f.sensitive, preview: f.sensitive ? "Type into a password/card field (text hidden)" : `Type: ${a.text.length > 300 ? a.text.slice(0, 300) + "…" : a.text}` });
       await env.guard(tabId, "typing");
+      await pointAtFocus(tabId, f.rect);
       await input.typeText(tabId, a.text);
       await afterAction(env, tabId, since, notes);
       return { content: [text([f.sensitive ? "Typed text into a sensitive field" : `Typed ${a.text.length} character(s)`, ...notes].join(". "))] };
@@ -215,6 +224,7 @@ export async function computer(env: ToolEnv, tabId: number, a: Args): Promise<Ou
       const f = await callPage<any>(tabId, "focusedInfo").catch(() => ({ sensitive: false }));
       await env.authorize({ tool: "computer", args: { action: act }, tabUrl: url, sensitive: !!f.sensitive && /^[^+\s]$/.test(a.text), preview: `Press: ${a.text}${a.repeat && a.repeat > 1 ? ` x${a.repeat}` : ""}` });
       await env.guard(tabId, "the key press");
+      await pointAtFocus(tabId, f.rect);
       try {
         await input.pressKeys(tabId, a.text, Math.min(100, Math.max(1, a.repeat ?? 1)));
       } catch (e: any) {

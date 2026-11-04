@@ -4,6 +4,7 @@ import { callPage, frameOfRef } from "./page";
 import { getShot } from "../common/idb";
 import { registrableDomain } from "../common/domain";
 import { text, ToolError, type Out, type ToolEnv } from "./env";
+import { cursorEffect, moveCursor, moveCursorToRect } from "./indicators";
 import { wrapPageContent } from "@pi-browser/shared/tab-context";
 
 const hhmmss = (ts: number) => new Date(ts).toTimeString().slice(0, 8);
@@ -79,11 +80,15 @@ export async function uploadImage(env: ToolEnv, tabId: number, a: { imageId: str
   if (a.ref) {
     target = { ref: a.ref };
     frame = frameOfRef(a.ref);
+    const at = await callPage<any>(tabId, "rectOf", [a.ref, true], frame).catch(() => null);
+    await moveCursorToRect(tabId, at?.rect);
   } else if (a.coordinate) {
     const { toViewport } = await import("./input");
     const [x, y] = toViewport(tabId, a.coordinate[0], a.coordinate[1]);
     target = { x, y };
+    await moveCursor(tabId, x, y);
   } else throw new ToolError("ref or coordinate is required");
+  await cursorEffect(tabId, { kind: "click" });
   const r = await callPage<{ text?: string; error?: string }>(tabId, "placeImage", [shot.data, shot.mime, name, target], frame);
   if (r.error) throw new ToolError(r.error);
   return { content: [text(r.text ?? "Image placed.")] };
@@ -99,6 +104,11 @@ export async function fileUpload(env: ToolEnv, tabId: number, a: { paths: string
   const frame = frameOfRef(a.ref);
   const tagged = await callPage<{ ok?: boolean; error?: string }>(tabId, "tagForUpload", [a.ref, token], frame);
   if (tagged.error) throw new ToolError(tagged.error);
+  const at = await callPage<any>(tabId, "rectOf", [a.ref, true], frame).catch(() => null);
+  if (at?.rect) {
+    await moveCursorToRect(tabId, at.rect);
+    await cursorEffect(tabId, { kind: "click" });
+  }
   try {
     const doc = await send<any>(tabId, "DOM.getDocument", { depth: 0 });
     const q = await send<any>(tabId, "DOM.querySelector", { nodeId: doc.root.nodeId, selector: `[data-pi-upload="${token}"]` });
