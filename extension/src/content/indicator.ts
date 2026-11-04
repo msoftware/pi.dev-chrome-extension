@@ -30,11 +30,28 @@ const INDICATOR_CSS = `
 .bar.on { display: inline-flex; }
 .bar button { border: 0; border-radius: 999px; padding: 6px 12px; font: 600 12px system-ui, sans-serif; cursor: pointer; background: #e0702c; color: #fff; }
 .bar button.ghost { background: transparent; color: #ddd; }
-.cursor { position: fixed; left: 0; top: 0; width: 22px; height: 22px; pointer-events: none; display: none; z-index: 2147483647;
-  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1); will-change: transform; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
-.cursor.on { display: block; }
+.cursor { position: fixed; left: 0; top: 0; width: 22px; height: 22px; pointer-events: none; opacity: 0; visibility: hidden;
+  transition: opacity 200ms ease, visibility 0s linear 200ms; will-change: transform; z-index: 2147483647; }
+.cursor.on { opacity: 1; visibility: visible; transition: opacity 200ms ease; }
+.cursor svg { display: block; width: 22px; height: 22px; transform-origin: 3px 2px; transition: transform 110ms ease-out;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
+.cursor.pressed svg { transform: scale(.8); }
+.badge { position: absolute; left: 16px; top: 19px; display: none; gap: 3px; padding: 4px 6px; border-radius: 999px;
+  background: #1f1b16; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.cursor.typing .badge { display: inline-flex; }
+.badge span { width: 4px; height: 4px; border-radius: 50%; background: #fff; animation: pi-dot 900ms ease-in-out infinite; }
+.badge span:nth-child(2) { animation-delay: 150ms; }
+.badge span:nth-child(3) { animation-delay: 300ms; }
+.ripple { position: fixed; left: 0; top: 0; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; box-sizing: border-box;
+  border: 2px solid rgba(224,112,44,.95); background: rgba(224,112,44,.18); pointer-events: none; z-index: 2147483646;
+  animation: pi-ripple 480ms ease-out forwards; }
+.ripple.right { border-style: dashed; }
+.ripple.hold { animation: pi-hold 260ms ease-out forwards; }
+@keyframes pi-ripple { from { transform: scale(.25); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+@keyframes pi-hold { from { transform: scale(.25); opacity: 1; } to { transform: scale(.8); opacity: .55; } }
+@keyframes pi-dot { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
 .chrome-hidden .glow, .chrome-hidden .stop, .chrome-hidden .bar, .chrome-hidden .hint { visibility: hidden; }
-@media (prefers-reduced-motion: reduce) { .glow, .cursor { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .glow, .cursor, .cursor svg { transition: none; } .badge span { animation: none; opacity: .8; } }
 `;
 
 let host: HTMLElement | null = null;
@@ -58,13 +75,13 @@ function build() {
     <button class="stop" type="button"><svg viewBox="0 0 12 12"><rect width="12" height="12" rx="2" fill="currentColor"/></svg><span></span></button>
     <div class="hint" role="status"></div>
     <div class="bar" role="status"><span class="msg"></span><button class="open" type="button"></button><button class="ghost dismiss" type="button"></button></div>
-    <svg class="cursor" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 2 L3 17 L7.2 13.2 L10 19.5 L12.6 18.3 L9.9 12 L15.5 12 Z" fill="#e0702c" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+    <div class="cursor" aria-hidden="true"><svg viewBox="0 0 22 22"><path d="M3 2 L3 17 L7.2 13.2 L10 19.5 L12.6 18.3 L9.9 12 L15.5 12 Z" fill="#e0702c" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg><div class="badge"><span></span><span></span><span></span></div></div>`;
   root.append(style, wrap);
   glow = wrap.querySelector(".glow")!;
   stopBtn = wrap.querySelector(".stop")!;
   hint = wrap.querySelector(".hint")!;
   bar = wrap.querySelector(".bar")!;
-  cursor = wrap.querySelector(".cursor")! as unknown as HTMLElement;
+  cursor = wrap.querySelector(".cursor")!;
   stopBtn.querySelector("span")!.textContent = t("indStop", "Stop agent");
   bar.querySelector(".msg")!.textContent = t("indStatic", "Agent active in this tab group");
   (bar.querySelector(".open") as HTMLElement).textContent = t("indOpenChat", "Open chat");
@@ -108,7 +125,136 @@ function hide() {
   active = false;
   glow.classList.remove("on");
   stopBtn.classList.remove("on");
-  cursor.classList.remove("on");
+  cursor.classList.remove("on", "pressed", "typing");
+}
+
+// ---- Phantom cursor animation: the cursor flies to wherever the agent acts next. ----
+
+interface Point {
+  x: number;
+  y: number;
+}
+/** Tip of the arrow inside the 22x22 SVG (path starts at M3 2). */
+const TIP = { x: 3, y: 2 };
+let pos: Point | null = null;
+let flight: { stop: () => void } | null = null;
+let typingTimer: number | undefined;
+let releaseTimer: number | undefined;
+
+const reducedMotion = () => {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+};
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+const clampToView = (p: Point): Point => ({ x: clamp(p.x, 0, Math.max(0, window.innerWidth - 1)), y: clamp(p.y, 0, Math.max(0, window.innerHeight - 1)) });
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+function place(p: Point) {
+  pos = p;
+  cursor.style.transform = `translate(${(p.x - TIP.x).toFixed(1)}px, ${(p.y - TIP.y).toFixed(1)}px)`;
+}
+
+/** Animates the cursor along a gently curved path (like a hand moving a mouse) and resolves on arrival. */
+function fly(target: Point, from: Point | null, duration?: number): Promise<void> {
+  build();
+  flight?.stop(); // a new target interrupts the running flight where it is
+  window.clearTimeout(typingTimer);
+  cursor.classList.remove("typing");
+  const end = clampToView(target);
+  cursor.classList.add("on");
+  // After a page load the script lost its position: continue from where the service worker saw it last, else swoop in.
+  const start = pos ?? (from ? clampToView(from) : clampToView({ x: end.x + 48, y: end.y + 64 }));
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const dist = Math.hypot(dx, dy);
+  const ms = duration ?? clamp(220 + dist * 0.45, 220, 600);
+  if (document.hidden || reducedMotion() || dist < 1 || ms <= 0) {
+    place(end);
+    return Promise.resolve();
+  }
+  // Quadratic Bézier with the control point pushed sideways: a slight arc instead of a robotic straight line.
+  const bend = Math.min(dist * 0.18, 70) * (dx >= 0 ? -1 : 1);
+  const cx = (start.x + end.x) / 2 + (-dy / dist) * bend;
+  const cy = (start.y + end.y) / 2 + (dx / dist) * bend;
+  return new Promise<void>((resolve) => {
+    const t0 = performance.now();
+    let raf = 0;
+    let done = false;
+    const finish = (arrive: boolean) => {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(raf);
+      window.clearTimeout(safety);
+      if (arrive) place(end);
+      if (flight === me) flight = null;
+      resolve();
+    };
+    const me = { stop: () => finish(false) };
+    const step = (now: number) => {
+      const p = clamp((now - t0) / ms, 0, 1);
+      const e = easeInOutCubic(p);
+      const u = 1 - e;
+      place({ x: u * u * start.x + 2 * u * e * cx + e * e * end.x, y: u * u * start.y + 2 * u * e * cy + e * e * end.y });
+      if (p < 1) raf = requestAnimationFrame(step);
+      else finish(true);
+    };
+    // rAF stops in background tabs: never let the caller wait longer than the flight itself.
+    const safety = window.setTimeout(() => finish(true), ms + 80);
+    flight = me;
+    place(start);
+    raf = requestAnimationFrame(step);
+  });
+}
+
+function ripple(at: Point, variant = "") {
+  if (reducedMotion()) return;
+  const r = document.createElement("div");
+  r.className = `ripple${variant ? ` ${variant}` : ""}`;
+  r.style.left = `${at.x}px`;
+  r.style.top = `${at.y}px`;
+  wrap.appendChild(r);
+  const remove = () => r.remove();
+  r.addEventListener("animationend", () => {
+    if (variant !== "hold") remove();
+  });
+  window.setTimeout(remove, variant === "hold" ? 5000 : 1000);
+  return r;
+}
+
+let holdRipple: HTMLElement | undefined;
+
+function effect(msg: { kind: string; button?: string; count?: number }) {
+  if (!host || !pos) return;
+  const at = { ...pos };
+  switch (msg.kind) {
+    case "click": {
+      const n = clamp(Math.round(msg.count ?? 1), 1, 3);
+      cursor.classList.add("pressed");
+      window.clearTimeout(releaseTimer);
+      releaseTimer = window.setTimeout(() => cursor.classList.remove("pressed"), 110 * n + 40);
+      for (let i = 0; i < n; i++) window.setTimeout(() => ripple(at, msg.button === "right" ? "right" : ""), i * 110);
+      break;
+    }
+    case "press":
+      cursor.classList.add("pressed");
+      holdRipple?.remove();
+      holdRipple = ripple(at, "hold");
+      break;
+    case "release":
+      cursor.classList.remove("pressed");
+      holdRipple?.remove();
+      holdRipple = undefined;
+      ripple(at);
+      break;
+    case "type":
+      cursor.classList.add("typing");
+      window.clearTimeout(typingTimer);
+      typingTimer = window.setTimeout(() => cursor.classList.remove("typing"), 1400);
+      break;
+  }
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -139,10 +285,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     case "HIDE_STATIC_INDICATOR":
       if (host) bar.classList.remove("on");
       break;
-    case "UPDATE_PHANTOM_CURSOR":
-      build();
-      cursor.classList.add("on");
-      cursor.style.transform = `translate(${Math.round(msg.x)}px, ${Math.round(msg.y)}px)`;
+    case "UPDATE_PHANTOM_CURSOR": {
+      const from = typeof msg.fromX === "number" && typeof msg.fromY === "number" ? { x: msg.fromX, y: msg.fromY } : null;
+      const arrived = fly({ x: Number(msg.x) || 0, y: Number(msg.y) || 0 }, from, typeof msg.duration === "number" ? msg.duration : undefined);
+      if (typeof msg.pressed === "boolean") cursor.classList.toggle("pressed", msg.pressed);
+      // Answer on arrival so the service worker dispatches the real input only once the cursor is there.
+      arrived.then(() => sendResponse({ ok: true }));
+      return true;
+    }
+    case "PHANTOM_CURSOR_EFFECT":
+      effect(msg);
       break;
     case "PING_INDICATOR":
       sendResponse({ active });

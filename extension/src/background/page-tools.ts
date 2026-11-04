@@ -5,6 +5,7 @@ import { attach, send, sendRacingDialog, tabState } from "./cdp";
 import { callAllFrames, callPage, frameOfRef } from "./page";
 import { image, text, ToolError, type Out, type ToolEnv } from "./env";
 import { preCheck } from "./security";
+import { cursorEffect, moveCursorToRect } from "./indicators";
 import { registrableDomain } from "../common/domain";
 
 export interface TreeResult {
@@ -79,6 +80,12 @@ export async function formInput(env: ToolEnv, tabId: number, a: { ref: string; v
   if (info.error) throw new ToolError(info.error);
   await authorizeSensitive(!!info.sensitive);
   await preCheck(tabId, env.group.groupId, env.perms, "filling the field");
+  // Phantom cursor: fly to the field and "click" it before the value changes.
+  const at = await callPage<any>(tabId, "rectOf", [a.ref, true], frame).catch(() => null);
+  if (at?.rect) {
+    await moveCursorToRect(tabId, at.rect);
+    await cursorEffect(tabId, { kind: "click" });
+  }
   const r = await callPage<{ text?: string; error?: string }>(tabId, "setValue", [a.ref, a.value], frame);
   if (r.error) throw new ToolError(r.error);
   return { content: [text(r.text ?? `Set ${a.ref}`)] };

@@ -12,7 +12,7 @@ import { detachAll, forgetTab, installListeners, noteTabUrl, onDetached, onDialo
 import { noteNewTab } from "./computer";
 import { cancelAll, cancelRequest, ToolExecutor } from "./executor";
 import { GifRecorder } from "./gif";
-import { sendIndicator } from "./indicators";
+import { forgetCursor, sendIndicator } from "./indicators";
 import { PanelHub } from "./panel-hub";
 import { PermissionManager } from "./permissions";
 import { pickerInject } from "./picker";
@@ -629,6 +629,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
   forgetTab(tabId);
+  forgetCursor(tabId);
   const g = await groups.sessionForMainTab(tabId);
   if (g) {
     if (running && g.groupId === activeGroupId) void stopAgent();

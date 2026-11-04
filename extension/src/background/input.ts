@@ -1,7 +1,7 @@
 /** Input engine over CDP (requirements section 7). Real mouse and keyboard are never touched. */
 import { charToKeyEvent, parseKeySequence, parseModifierString, MOD, type Platform } from "@pi-browser/shared/keys";
 import { send, sendRacingDialog, tabState } from "./cdp";
-import { sendIndicator, sleep } from "./indicators";
+import { cursorEffect, moveCursor, sendIndicator, sleep } from "./indicators";
 
 export function platform(): Platform {
   const p = ((navigator as any).userAgentData?.platform ?? navigator.platform ?? "").toLowerCase();
@@ -47,12 +47,14 @@ export async function click(tabId: number, x: number, y: number, o: ClickOptions
   await sendIndicator(tabId, { type: "HIDE_FOR_TOOL_USE", cursor: false });
   try {
     await sleep(50);
-    await sendIndicator(tabId, { type: "UPDATE_PHANTOM_CURSOR", x, y });
-    if (visible) await sleep(250);
+    // The phantom cursor flies to the target first; the page answers when it has arrived.
+    await moveCursor(tabId, x, y);
+    if (visible) await sleep(120);
     await send(tabId, "Input.dispatchMouseEvent", { type: "mouseMoved", x, y, button: "none", buttons: 0, modifiers: o.modifiers });
-    if (visible) await sleep(300);
+    if (visible) await sleep(180);
     await o.beforePress();
     const b = BUTTON[o.button];
+    await cursorEffect(tabId, { kind: "click", button: o.button, count: o.count });
     for (let i = 1; i <= o.count; i++) {
       await sendRacingDialog(tabId, "Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: b.name, buttons: b.mask, clickCount: i, modifiers: o.modifiers });
       await sleep(12);
@@ -66,26 +68,33 @@ export async function click(tabId: number, x: number, y: number, o: ClickOptions
 
 /** INP-06: hover only moves. */
 export async function hover(tabId: number, x: number, y: number, modifiers: number): Promise<void> {
-  await sendIndicator(tabId, { type: "UPDATE_PHANTOM_CURSOR", x, y });
-  if (await tabIsVisible(tabId)) await sleep(250);
+  await moveCursor(tabId, x, y);
+  if (await tabIsVisible(tabId)) await sleep(120);
   await send(tabId, "Input.dispatchMouseEvent", { type: "mouseMoved", x, y, button: "none", buttons: 0, modifiers });
   if (await tabIsVisible(tabId)) await sleep(300);
 }
 
 export async function drag(tabId: number, x0: number, y0: number, x1: number, y1: number, beforePress: () => Promise<void>): Promise<void> {
-  await sendIndicator(tabId, { type: "UPDATE_PHANTOM_CURSOR", x: x0, y: y0 });
+  const visible = await tabIsVisible(tabId);
+  await moveCursor(tabId, x0, y0);
   await send(tabId, "Input.dispatchMouseEvent", { type: "mouseMoved", x: x0, y: y0, button: "none", buttons: 0 });
+  if (visible) await sleep(120);
   await beforePress();
+  await cursorEffect(tabId, { kind: "press" });
   await send(tabId, "Input.dispatchMouseEvent", { type: "mousePressed", x: x0, y: y0, button: "left", buttons: 1, clickCount: 1 });
   const steps = 5;
+  const stepMs = visible ? 80 : 15;
+  // The cursor travels with the held button in sync with the dispatched moves (not awaited: both run in parallel).
+  const travel = moveCursor(tabId, x1, y1, { pressed: true, duration: visible ? steps * stepMs : 0 });
   for (let i = 1; i <= steps; i++) {
     const x = x0 + ((x1 - x0) * i) / steps;
     const y = y0 + ((y1 - y0) * i) / steps;
     await send(tabId, "Input.dispatchMouseEvent", { type: "mouseMoved", x, y, button: "left", buttons: 1 });
-    if (i === 1) await sendIndicator(tabId, { type: "UPDATE_PHANTOM_CURSOR", x: x1, y: y1 });
-    await sleep(15);
+    await sleep(stepMs);
   }
+  await travel;
   await send(tabId, "Input.dispatchMouseEvent", { type: "mouseReleased", x: x1, y: y1, button: "left", buttons: 0, clickCount: 1 });
+  await cursorEffect(tabId, { kind: "release" });
 }
 
 /** INP-07 */
@@ -93,7 +102,7 @@ export async function scroll(tabId: number, x: number, y: number, direction: str
   const px = amount * 100;
   const deltaX = direction === "left" ? -px : direction === "right" ? px : 0;
   const deltaY = direction === "up" ? -px : direction === "down" ? px : 0;
-  await sendIndicator(tabId, { type: "UPDATE_PHANTOM_CURSOR", x, y });
+  await moveCursor(tabId, x, y);
   await send(tabId, "Input.dispatchMouseEvent", { type: "mouseWheel", x, y, deltaX, deltaY });
 }
 

@@ -134,6 +134,8 @@ const api = {
     return {
       tag: el.tagName.toLowerCase(),
       sensitive: isSensitiveField({ type: el.getAttribute("type"), autocomplete: el.getAttribute("autocomplete") }),
+      // For the phantom cursor: typing and key presses happen where the focus is.
+      rect: topRect(el),
     };
   },
   /** form_input: set a value the way a user would, so React/Vue pick it up. */
