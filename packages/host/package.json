@@ -1,6 +1,6 @@
 {
   "name": "pi-browser-host",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headless host for the Browser Agent: runs a pi session through the SDK with the bridge loaded (panel-led mode, API-02)",
   "license": "MIT",
   "type": "module",
@@ -8,7 +8,7 @@
     "pi-browser-host": "./bin/pi-browser-host.mjs"
   },
   "dependencies": {
-    "pi-browser-bridge": "0.1.0",
+    "pi-browser-bridge": "0.1.1",
     "jiti": "^2.4.0"
   },
   "peerDependencies": {
